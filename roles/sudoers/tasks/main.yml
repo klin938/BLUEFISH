@@ -1,0 +1,5 @@
+- name: Copy a new sudoers file into place, after passing validation with visudo
+  template:
+    src: sudoers
+    dest: /etc/sudoers
+    validate: /usr/sbin/visudo -cf %s

@@ -1,0 +1,6 @@
+#
+# {{ ansible_managed }}
+#
+
+PWBCAdminStore	-fstype=nfs,hard,bg,intr,nolock,acl,vers=3	10.0.2.1:/&
+PWBCAppData		-fstype=nfs,hard,bg,intr,nolock,acl,vers=3	10.0.2.1:/&

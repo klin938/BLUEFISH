@@ -1,0 +1,9 @@
+#
+# {{ ansible_managed }}
+#
+
+/share /etc/auto.share --timeout=1200
+/home  /etc/auto.home  --timeout=1200
+/misc   /etc/auto.misc
+/directflow     /etc/auto.directflow
+/paella	/etc/auto.paella

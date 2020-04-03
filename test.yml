@@ -1,0 +1,7 @@
+- hosts: localhost
+  roles:
+    - auth
+    - local_accounts
+    - sudoers
+    - autofs
+    - panfs

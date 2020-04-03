@@ -1,0 +1,43 @@
+- name: Install required packages from YUM
+  yum:
+    name:
+      - nfs-utils
+      - chrony
+    state: present
+
+- name: Enable chrony NTP service
+  service: name=chronyd state=started enabled=yes
+
+- name: Create temporary mount point under /tmp
+  file:
+    path: /tmp/PWBCAdminStore
+    state: directory
+
+- name: Mount PWBCAdminStore volume to /tmp/PWBCAdminStore
+  mount:
+    fstype: nfs
+    state: mounted
+    src: 10.0.2.1:/PWBCAdminStore
+    path: /tmp/PWBCAdminStore
+#  command: "mount -t nfs 10.0.2.1:/PWBCAdminStore /tmp/PWBCAdminStore"
+
+- pause: seconds=5
+
+- name: Checking CentOS version
+  shell: "cat /etc/centos-release | awk '{print $4}'"
+  register: "os_ver"
+
+- name: Installing DirectFLOW client rpm
+  shell: "rpm -Uvh /tmp/PWBCAdminStore/panfs/directflow/CentOS/{{ os_ver.stdout }}/*.rpm"
+  register: "panfs_rpm"
+  failed_when: "'FAILED' in panfs_rpm.stderr"
+
+- debug: var=panfs_rpm.stdout_lines
+
+- name: umount PWBCAdminStore
+  command: "umount /tmp/PWBCAdminStore"
+
+- name: Remove temporary mount point
+  file:
+    path: /tmp/PWBCAdminStore
+    state: absent

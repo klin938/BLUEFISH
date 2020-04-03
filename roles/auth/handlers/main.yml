@@ -1,0 +1,12 @@
+- name: restart sssd
+  service: name=sssd state=restarted
+
+- name: restart nscd
+  service: name=nscd state=restarted
+
+- name: restart crond
+  service: name=crond state=restarted
+  listen: "restart authconfig dependent"
+
+- name: restart samba
+  service: name=smb state=restarted

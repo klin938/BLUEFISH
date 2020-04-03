@@ -1,0 +1,5 @@
+#
+# {{ ansible_managed }}
+#
+
+*		-fstype=panfs,rw,noauto,panauto,rmlist=(10.0.2.1;10.0.2.2;10.0.2.3),iscsi-sock-rsize=131072,callback-network-allow=10.0.0.0/255.255.0.0		panfs://10.0.2.1/ClusterHome/&

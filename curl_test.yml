@@ -1,0 +1,6 @@
+---
+- hosts: localhost
+  vars:
+  tasks:
+    - name: post to consul
+      shell: "curl --user admin:admin 'http://10.0.1.245:8080/api/v1/clusters/Grandline' -X PUT -H 'X-Requested-By: X-Requested-By' -H 'Cookie: AMBARISESSIONID=node017c6u8hjkbp8513wc6v2f263e6111.node0' --data @/home/lmansop/http_body.payload"

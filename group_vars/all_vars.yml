@@ -1,0 +1,6 @@
+---
+ambari_api_host: 10.0.1.245
+ambari_api_port: 8080
+zeppelin_host: zama-mlx.mlx
+cluster: "Grandline"
+

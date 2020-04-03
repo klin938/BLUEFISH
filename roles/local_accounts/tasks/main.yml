@@ -1,0 +1,10 @@
+- name: Add luffy user
+  user:
+    name: luffy
+    groups: wheel
+    append: yes
+    home: /local_home/luffy
+    password: $1$mugiwara$XLuMpK8aOFYWN/qZcJXqh/
+  with_items:
+    - lmansop
+    - pwbcad

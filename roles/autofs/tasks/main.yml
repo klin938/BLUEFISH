@@ -1,0 +1,23 @@
+- name: Install autofs from YUM
+  yum: 
+    name: 
+      - autofs
+      - nfs-utils 
+    state: present
+
+- name: Enable autofs service
+  service: name=autofs enabled=yes
+
+- name: Copy autofs config files as templates
+  copy: src={{ item }} dest=/etc/{{ item }}
+        owner=root group=root mode=0644
+  with_items:
+    - auto.master.ansible
+    - auto.directflow.ansible
+    - auto.home.ansible
+    - auto.share.ansible
+    - auto.misc.ansible
+    - auto.paella.ansible
+
+- debug: msg="<TODO NEXT> autofs conf files have been placed as the templates such as auto.xxxx.ansible.
+         Please manually configure autofs accordingly."
