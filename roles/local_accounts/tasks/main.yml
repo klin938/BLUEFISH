@@ -5,6 +5,3 @@
     append: yes
     home: /local_home/luffy
     password: $1$mugiwara$XLuMpK8aOFYWN/qZcJXqh/
-  with_items:
-    - lmansop
-    - pwbcad
