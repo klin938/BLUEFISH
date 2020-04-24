@@ -1,12 +1,11 @@
 - hosts: localhost
-  vars:
-   amb_ver: 2.7.3.0
-   Info_ClusterName: "Wolfpack"
-   rocks_ambari_server: 10.0.1.220
   tasks:
     - name: Configure firewall
       shell: firewall-cmd --permanent --zone=trusted --add-interface=ens224
   roles:
+    - auth
+    - local_accounts
+    - sudoers
     - panfs
     - autofs
-    - hw-ambari
+    - ambari-agent
