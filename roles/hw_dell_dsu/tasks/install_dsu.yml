@@ -1,0 +1,10 @@
+- name: YUM install DSU (dell-system-update)
+  yum:
+    name:
+      - dell-system-update
+    state: present
+    update_cache: yes
+  register: yum_rc
+  retries: 10
+  until: yum_rc is succeeded
+  delay: 5

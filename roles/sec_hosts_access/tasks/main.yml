@@ -1,0 +1,10 @@
+- name: HOSTS_ACCESS configure hosts.deny from template
+  template: src=hosts.deny.j2 dest=/etc/hosts.deny
+            owner=root group=root mode=0644
+  notify: restart sshd
+  
+- name: HOSTS_ACCESS configure hosts.allow from template
+  template: src=hosts.allow.{{ hosts_allow_profile }}.j2 dest=/etc/hosts.allow
+            owner=root group=root mode=0644
+  notify: restart sshd
+

@@ -1,0 +1,5 @@
+- name: YUM add Wolfpack Cluster's Rocks local repository
+  template: src=rocks-local.repo.j2 dest=/etc/yum.repos.d/rocks-local.repo
+            owner=root group=root mode=0644
+  notify: clean yum
+

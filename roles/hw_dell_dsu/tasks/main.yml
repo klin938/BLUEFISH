@@ -1,0 +1,9 @@
+- name: YUM deploy DELL DSU repository
+  script: install_dell_repo.sh
+
+- include: install_dsu.yml
+  when: install_dsu
+
+- include: install_omsa.yml
+  when: install_omsa
+

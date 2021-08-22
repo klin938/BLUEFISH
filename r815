@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  vars:
+    ansible_connection: local
+    ansible_python_interpreter: "{{ansible_playbook_python}}"
+    inventory_hostname: exia.garvan.unsw.edu.au
+  vars_files:
+    - group_vars/all
+  roles:
+    - role: common
+      vars:
+      dummy: 'dummy'
+    - role: sec_hosts_access
+      vars:
+        hosts_allow_profile: 'login'
+    - role: hw_dell_dsu
+      vars:
+        install_dsu: true
+        install_omsa: true
+

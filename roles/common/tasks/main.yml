@@ -1,0 +1,11 @@
+- name: YUM install essential packages required for executing the playbook tasks
+  yum:
+    name:
+      - expect
+    state: present
+    update_cache: yes
+  register: yum_rc
+  retries: 10
+  until: yum_rc is succeeded
+  delay: 5
+
