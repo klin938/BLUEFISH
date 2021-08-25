@@ -1,0 +1,20 @@
+- name: YUM install MLNX_OFED installer dependencies packages
+  yum:
+    name:
+      - tk
+      - libusbx
+      - fuse-libs
+    state: present
+    update_cache: yes
+  register: yum_rc
+  retries: 10
+  until: yum_rc is succeeded
+  delay: 5
+
+- name: MLNX_OFED tgz file unarchived to /tmp
+  unarchive:
+    src: "{{ mlnx_ofed_tgz_path }}"
+    dest: /tmp
+
+- name: MLNX_OFED installing the driver
+  command: "/tmp/{{ mlnx_ofed_version }}/mlnxofedinstall {{ mlnx_ofed_installer_opts }}"

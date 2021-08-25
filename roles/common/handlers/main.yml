@@ -28,3 +28,6 @@
 
 - name: clean yum
   command: /usr/bin/yum clean all
+
+- name: restart network
+  service: name=network state=restarted

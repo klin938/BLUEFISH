@@ -7,14 +7,50 @@
   vars_files:
     - group_vars/all
   roles:
+
     - role: common
       vars:
       dummy: 'dummy'
+
     - role: sec_hosts_access
       vars:
         hosts_allow_profile: 'login'
+
     - role: hw_dell_dsu
       vars:
         install_dsu: true
         install_omsa: true
+
+    - repo_rocks_wolfpack
+
+    - role: nw_mlnx_ofed
+      vars:
+        install_mlnx_ofed: false
+        mlnx_ofed_version: 'MLNX_OFED_LINUX-5.4-1.0.3.0-rhel7.9-x86_64'
+        mlnx_ofed_tgz_path: "/tmp/{{ mlnx_ofed_version }}.tgz"
+        mlnx_ofed_installer_opts: '--force --with-neohost-backend'
+
+    - role: nw_linux_bonding
+      vars:
+        config_cx4_lx: true
+        cx4_lx_bond_ip: '10.0.1.149'
+        cx4_lx_bond_dev_file: '{{ ansible_env.HOME }}/cx4_lx_bond_dev'
+  post_tasks:
+    - name: YUM Rocks-7.0 install additional packages from Rocks repo
+      yum:
+        name:
+          - singularity
+          - panfs
+          - panfs-apps
+        state: present
+        update_cache: yes
+        enablerepo: Rocks-7.0
+
+    - name: YUM EPEL install additional packages from EPEL repo
+      yum:
+        name:
+          - htop
+        state: present
+        update_cache: yes
+        enablerepo: epel
 

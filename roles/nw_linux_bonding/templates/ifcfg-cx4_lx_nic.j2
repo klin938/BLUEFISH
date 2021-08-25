@@ -1,0 +1,13 @@
+#
+# {{ ansible_managed }}
+#
+DEVICE={{ item }}
+BOOTPROTO=none
+ONBOOT=yes
+NAME=bond0-{{ item }}
+TYPE=Ethernet
+MASTER=bond0
+SLAVE=yes
+MTU={{ cx4_lx_bond_mtu }}
+USERCTL=no
+NM_CONTROLLED=no

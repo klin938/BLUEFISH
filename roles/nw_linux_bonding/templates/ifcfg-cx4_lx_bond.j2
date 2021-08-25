@@ -1,0 +1,16 @@
+#
+# {{ ansible_managed }}
+#
+DEVICE=bond0
+NAME=bond0
+TYPE=Bond
+BONDING_MASTER=yes
+NETMASK={{ cx4_lx_bond_netmask }}
+ONBOOT=yes
+BOOTPROTO=none
+BONDING_OPTS={{ cx4_lx_bond_opts }}
+MTU={{ cx4_lx_bond_mtu }}
+USERCTL=no
+NM_CONTROLLED=no
+IPADDR={{ cx4_lx_bond_ip }}
+

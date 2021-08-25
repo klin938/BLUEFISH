@@ -1,0 +1,24 @@
+- name: ConnectX-4 Lx bond master ifcfg deploy
+  template:
+    src: ifcfg-cx4_lx_bond.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-bond0
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart network
+
+- name: ConnectX-4 Lx read the list of slave dev
+  command: cat "{{ cx4_lx_bond_dev_file }}"
+  register: cx4_lx_bond_dev
+
+- name: ConnectX-4 Lx bond slave ifcfg deploy
+  template:
+    src: ifcfg-cx4_lx_nic.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - "{{ cx4_lx_bond_dev.stdout_lines }}"
+  notify: restart network
+

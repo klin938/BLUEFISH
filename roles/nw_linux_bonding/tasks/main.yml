@@ -1,0 +1,2 @@
+- include: config_cx4_lx.yml
+  when: config_cx4_lx
