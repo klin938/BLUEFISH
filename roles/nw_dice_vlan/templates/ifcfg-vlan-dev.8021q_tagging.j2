@@ -1,0 +1,10 @@
+#
+# {{ ansible_managed }}
+#
+DEVICE={{ dice_vlan_8021q_trunk_dev }}.{{ dice_vlans[item.vlan].id }}
+BOOTPROTO=none
+ONBOOT=yes
+IPADDR={{ item.ip }}
+PREFIX={{ dice_vlans[item.vlan].prefix }}
+NETWORK={{ dice_vlans[item.vlan].network }}
+VLAN=yes
