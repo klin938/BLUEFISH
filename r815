@@ -36,6 +36,10 @@
         cx4_lx_bond_ip: '10.0.1.149'
         cx4_lx_bond_dev_file: '{{ ansible_env.HOME }}/cx4_lx_bond_dev'
 
+    - role: nw_dice_lldp
+      vars:
+        dice_lldp_dev_file: '{{ ansible_env.HOME }}/dice_lldp_dev'
+
     - role: nw_dice_vlan
       vars:
         config_dice_vlan_8021q_tagging: true

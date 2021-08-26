@@ -10,6 +10,7 @@
 - name: ConnectX-4 Lx read the list of slave dev
   command: cat "{{ cx4_lx_bond_dev_file }}"
   register: cx4_lx_bond_dev
+  changed_when: false
 
 - name: ConnectX-4 Lx bond slave ifcfg deploy
   template:
