@@ -1,2 +1,5 @@
 - include: dice_vlan_8021q_tagging.yml
   when: config_dice_vlan_8021q_tagging
+
+- include: dice_vlan_untagged.yml
+  when: config_dice_vlan_untagged

@@ -1,16 +1,72 @@
+#
+# HOWTO:
+#
+# This file contains all variables which are configurable by admin when deploying a CentOS 7 server/VM.
+# Note that many roles have more than one sections and most of them are disabled by default (set false).
+# So even the role is added to host's playbook, it maynot do anything unless the specific sections are
+# enabled (set true).
+#
+# For variables which have been commented out, normally it means no default value provided, they must be
+# filled in in target host's playbook as part of customisation.
+#
+# The constant variables, which generally are not configurable are not defined in here. These vars are
+# defined in each role directory:
+#
+# roles/A_ROLE/vars/main.yml
+#
 
-#######################################
-# ROLE: nw_mlnx_ofed
-#######################################
-install_mlnx_ofed: true
+#######################################################################
+##
+## ROLE: nw_dice_vlan
+##
+########################################################################
+config_dice_vlan_8021q_tagging: false
+
+#dice_vlan_8021q_trunk_dev: 'emX'
+
+#
+# Definition of the host IPs for DICE's 802.1Q tagging VLAN. The only
+# changable field is the IP. The complete DICE 802.1Q tagging VLAN info
+# is defined in here:
+#
+# roles/nw_dice_vlan/vars/main.yml 
+#
+#dice_vlan_8021q_ips:
+#  - vlan_10:
+#    vlan: 'vlan_10'
+#    ip: '192.168.11.xx'
+#  - vlan_20:
+#    vlan: 'vlan_20'
+#    ip: '192.168.20.xx'
+
+config_dice_vlan_untagged: false
+
+#dice_vlan_untagged_ips:
+#  - vlan_11:
+#    vlan: 'vlan_11'
+#    dev: 'ethX'
+#    ip: '192.168.12.xx'
+#  - vlan_40:
+#    vlan: 'vlan_40'
+#    dev: 'ethX'
+#    ip: '192.168.40.xx'
+
+#######################################################################
+##
+## ROLE: nw_mlnx_ofed
+##
+#######################################################################
+install_mlnx_ofed: false
 
 #mlnx_ofed_version: 'MLNX_OFED_LINUX-5.4-1.0.3.0-rhel7.9-x86_64'
 #mlnx_ofed_tgz_path: "/share/apps/install/{{ mlnx_ofed_version }}.tgz"
 mlnx_ofed_installer_opts: '--without-fw-update --force'
 
-#######################################
+#######################################################################
+##
 ## ROLE: nw_linux_bonding
-########################################
+##
+#######################################################################
 config_cx4_lx: false
 cx4_lx_bond_netmask: '255.255.0.0'
 cx4_lx_bond_opts: 'mode=802.3ad miimon=100 xmit_hash_policy=layer3+4'
@@ -18,7 +74,9 @@ cx4_lx_bond_mtu: '9000'
 
 #cx4_lx_bond_ip: 10.0.1.188
 
+#
 # A list of participant nic, generally can be found by running:
+#
 # lshw -class network | grep -A5 'ConnectX-4' | grep 'logical'
 # 
 # The file should strictly contain interface's logical name ONLY,
@@ -30,8 +88,10 @@ cx4_lx_bond_mtu: '9000'
 #
 cx4_lx_bond_dev_file: '{{ ansible_env.HOME }}/cx4_lx_bond_dev'
 
-#######################################
-# ROLE: hw_dell_dsu
-#######################################
+#######################################################################
+## 
+## ROLE: hw_dell_dsu
+##
+#######################################################################
 install_dsu: false
 install_omsa: false

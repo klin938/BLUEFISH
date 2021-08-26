@@ -1,0 +1,13 @@
+- debug:
+    msg: "Interface: {{ item.dev }} VLAN: {{ dice_vlans[item.vlan].id }}_{{ dice_vlans[item.vlan].common_name }} IP: {{ item.ip }} MTU: {{ dice_vlans[item.vlan].mtu }}"
+  with_items: "{{ dice_vlan_untagged_ips }}"
+
+- name: DICE VLAN untagged VLAN interface ifcfg deploy
+  template:
+    src: ifcfg-vlan-dev.untagged.j2
+    dest: /etc/sysconfig/network-scripts/ifcfg-{{ item.dev }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items: "{{ dice_vlan_untagged_ips }}"
+  notify: restart network

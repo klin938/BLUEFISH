@@ -7,29 +7,50 @@
 dice_vlans:
   vlan_10: # Wolfpack
     id: 10
+    common_name: 'Wolfpack'
     prefix: 24
     network: '192.168.11.0'
-  vlan_11: # Brenner (NOT trunk)
+    netmask: '255.255.255.0'
+    mtu: 1500
+  vlan_11:       # NOT trunk
+    common_name: 'Brenner'
     id: 11
     prefix: 24
     network: '192.168.12.0'
-  vlan_20: # Grandline
+    netmask: '255.255.255.0'
+    mtu: 1500
+  vlan_20:
+    common_name: 'Grandline'
     id: 20
     prefix: 24
     network: '192.168.20.0'
-  vlan_30: # BMC
+    netmask: '255.255.255.0'
+    mtu: 1500
+  vlan_30:
+    common_name: 'BMC'
     id: 30
     prefix: 24
     network: '192.168.30.0'
-  vlan_40: # VMWare (NOT trunk)
+    netmask: '255.255.255.0'
+    mtu: 1500
+  vlan_40:       # NOT trunk
+    common_name: 'VMware'
     id: 40
     prefix: 24
     network: '192.168.40.0'
-  vlan_50: # DevOps
+    netmask: '255.255.255.0'
+    mtu: 1500
+  vlan_50:
+    common_name: 'DevOps'
     id: 50
     prefix: 24
     network: '192.168.50.0'
-  vlan_60: # Albacore
+    netmask: '255.255.255.0'
+    mtu: 1500
+  vlan_60:
+    common_name: 'Albacore_Ceph'
     id: 60
     prefix: 24
     network: '192.168.60.0'
+    netmask: '255.255.255.0'
+    mtu: 1500

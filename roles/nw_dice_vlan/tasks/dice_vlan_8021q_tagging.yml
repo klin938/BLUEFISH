@@ -1,5 +1,5 @@
 - debug:
-    msg: "DICE VLAN interface {{ dice_vlan_8021q_trunk_dev }}.{{ dice_vlans[item.vlan].id }} {{ item.ip }}"
+    msg: "Interface: {{ dice_vlan_8021q_trunk_dev }}.{{ dice_vlans[item.vlan].id }} VLAN: {{ dice_vlans[item.vlan].id }}_{{ dice_vlans[item.vlan].common_name }} IP: {{ item.ip }} MTU: {{ dice_vlans[item.vlan].mtu }}"
   with_items: "{{ dice_vlan_8021q_ips }}"
 
 - name: KERNEL MOD add the 801.1Q module

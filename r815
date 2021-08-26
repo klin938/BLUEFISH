@@ -7,6 +7,8 @@
   vars_files:
     - group_vars/all
   roles:
+    - repo_rocks_wolfpack
+    - fs_autofs
 
     - role: common
       vars:
@@ -21,8 +23,6 @@
         install_dsu: true
         install_omsa: true
 
-    - repo_rocks_wolfpack
-
     - role: nw_mlnx_ofed
       vars:
         install_mlnx_ofed: false
@@ -35,6 +35,38 @@
         config_cx4_lx: true
         cx4_lx_bond_ip: '10.0.1.149'
         cx4_lx_bond_dev_file: '{{ ansible_env.HOME }}/cx4_lx_bond_dev'
+
+    - role: nw_dice_vlan
+      vars:
+        config_dice_vlan_8021q_tagging: true
+        dice_vlan_8021q_trunk_dev: 'em3'
+        dice_vlan_8021q_ips:
+          - vlan_10:
+            vlan: 'vlan_10'
+            ip: '192.168.11.149'
+          - vlan_20:
+            vlan: 'vlan_20'
+            ip: '192.168.20.149'
+          - vlan_30:  
+            vlan: 'vlan_30'
+            ip: '192.168.30.242'
+          - vlan_50:
+            vlan: 'vlan_50'
+            ip: '192.168.50.149'
+          - vlan_60:  
+            vlan: 'vlan_60'
+            ip: '192.168.60.149'
+        config_dice_vlan_untagged: true
+        dice_vlan_untagged_ips:
+          - vlan_11:
+            vlan: 'vlan_11'
+            dev: 'em1'
+            ip: '192.168.12.149'
+          - vlan_40:
+            vlan: 'vlan_40'
+            dev: 'em4'
+            ip: '192.168.40.149'
+
   post_tasks:
     - name: YUM Rocks-7.0 install additional packages from Rocks repo
       yum:

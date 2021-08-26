@@ -1,0 +1,12 @@
+#
+# {{ ansible_managed }}
+#
+
+DEVICE={{ item.dev }}
+TYPE=Ethernet
+NM_CONTROLLED=no
+BOOTPROTO=static
+ONBOOT=yes
+IPADDR={{ item.ip }}
+NETMASK={{ dice_vlans[item.vlan].netmask }}
+MTU={{ dice_vlans[item.vlan].mtu }}
