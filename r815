@@ -4,6 +4,9 @@
     ansible_connection: local
     ansible_python_interpreter: "{{ansible_playbook_python}}"
     inventory_hostname: exia.garvan.unsw.edu.au
+    sysctl_settings:
+      net.ipv6.conf.all.disable_ipv6: 1
+      net.ipv6.conf.default.disable_ipv6: 1
   vars_files:
     - group_vars/all
   roles:
@@ -20,8 +23,8 @@
 
     - role: hw_dell_dsu
       vars:
-        install_dsu: true
-        install_omsa: true
+        install_dsu: false
+        install_omsa: false
 
     - role: nw_mlnx_ofed
       vars:
@@ -32,7 +35,7 @@
 
     - role: nw_linux_bonding
       vars:
-        config_cx4_lx: true
+        config_cx4_lx: false
         cx4_lx_bond_ip: '10.0.1.149'
         cx4_lx_bond_dev_file: '{{ ansible_env.HOME }}/cx4_lx_bond_dev'
 
@@ -71,6 +74,10 @@
             dev: 'em4'
             ip: '192.168.40.149'
 
+    - role: nw_xrdp
+      vars:
+        xrdp_wm: 'xfce4-session'
+
   post_tasks:
     - name: YUM Rocks-7.0 install additional packages from Rocks repo
       yum:
@@ -90,3 +97,18 @@
         update_cache: yes
         enablerepo: epel
 
+    - name: SELINUX disabled in config file (reboot required)
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: '^SELINUX='
+        line: 'SELINUX=disabled'
+
+    - name: sysctl apply desired settings
+      sysctl:
+        name: '{{ item.key }}'
+        value: '{{ item.value }}'
+        sysctl_set: yes
+        state: present
+        reload: yes
+        ignoreerrors: yes
+      with_dict: '{{ sysctl_settings }}'

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#
+# {{ ansible_managed }}
+#
+
+WM="$(which {{ xrdp_wm }} 2>/dev/null)"
+exec "$WM"

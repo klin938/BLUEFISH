@@ -31,3 +31,6 @@
 
 - name: restart network
   service: name=network state=restarted
+
+- name: restart xrdp
+  service: name=xrdp state=restarted

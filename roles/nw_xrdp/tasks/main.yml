@@ -1,0 +1,40 @@
+- include: install_xfce.yml
+  when: xrdp_wm == "xfce4-session"
+
+- name: YUM install xrdp from EPEL
+  yum:
+    name: xrdp
+    enablerepo: epel
+    state: present
+    update_cache: yes
+  register: yum_rc
+  retries: 10
+  until: yum_rc is succeeded
+  delay: 5
+
+- name: xRDP enable as a service
+  service:
+    name: xrdp
+    state: started
+    enabled: yes 
+
+- name: xRDP startwm-bash.sh script deploy
+  template:
+    src: startwm-bash.sh.j2
+    dest: /etc/xrdp/startwm-bash.sh
+    owner: root
+    group: root
+    mode: 0755
+  notify: restart xrdp
+
+- name: xRDP configure DefaultWindowManager in sesman.ini
+  lineinfile:
+    path: /etc/xrdp/sesman.ini
+    regexp: '^DefaultWindowManager='
+    line: 'DefaultWindowManager=/etc/xrdp/startwm-bash.sh'
+
+- name: FIREWALLD configure rule for RDP/3389
+  firewalld:
+    port: 3389/tcp
+    permanent: true
+    state: enabled
