@@ -4,9 +4,6 @@
     ansible_connection: local
     ansible_python_interpreter: "{{ansible_playbook_python}}"
     inventory_hostname: exia.garvan.unsw.edu.au
-    sysctl_settings:
-      net.ipv6.conf.all.disable_ipv6: 1
-      net.ipv6.conf.default.disable_ipv6: 1
   vars_files:
     - group_vars/all
   roles:
@@ -17,6 +14,8 @@
       vars:
       dummy: 'dummy'
 
+    - role: sec_selinux_disable
+
     - role: sec_hosts_access
       vars:
         hosts_allow_profile: 'login'
@@ -26,16 +25,20 @@
         install_dsu: false
         install_omsa: false
 
-    - role: nw_mlnx_ofed
-      vars:
-        install_mlnx_ofed: false
-        mlnx_ofed_version: 'MLNX_OFED_LINUX-5.4-1.0.3.0-rhel7.9-x86_64'
-        mlnx_ofed_tgz_path: "/tmp/{{ mlnx_ofed_version }}.tgz"
-        mlnx_ofed_installer_opts: '--force --with-neohost-backend'
+    - role: nw_ipv6_disable
+
+# we noticed mlnx nic logical name change after the installation
+# so we should install the mlnx_ofed driver manually prior running
+# the bluefish deployment. We keep this section here just for demo
+# purposes.
+#    - role: nw_mlnx_ofed
+#      vars:
+#        install_mlnx_ofed: true
+#        mlnx_ofed_installer_opts: '--force --with-neohost-backend'
 
     - role: nw_linux_bonding
       vars:
-        config_cx4_lx: false
+        config_cx4_lx: true
         cx4_lx_bond_ip: '10.0.1.149'
         cx4_lx_bond_dev_file: '{{ ansible_env.HOME }}/cx4_lx_bond_dev'
 
@@ -75,8 +78,6 @@
             ip: '192.168.40.149'
 
     - role: nw_xrdp
-      vars:
-        xrdp_wm: 'xfce4-session'
 
   post_tasks:
     - name: YUM Rocks-7.0 install additional packages from Rocks repo
@@ -93,22 +94,16 @@
       yum:
         name:
           - htop
+          - net-tools
         state: present
         update_cache: yes
         enablerepo: epel
 
-    - name: SELINUX disabled in config file (reboot required)
-      lineinfile:
-        path: /etc/selinux/config
-        regexp: '^SELINUX='
-        line: 'SELINUX=disabled'
+    - name: NetworkManager disabled the service
+      service:
+        name: NetworkManager
+        state: stopped
+        enabled: no
 
-    - name: sysctl apply desired settings
-      sysctl:
-        name: '{{ item.key }}'
-        value: '{{ item.value }}'
-        sysctl_set: yes
-        state: present
-        reload: yes
-        ignoreerrors: yes
-      with_dict: '{{ sysctl_settings }}'
+    - debug: msg="** completed ** please reboot the server now."
+

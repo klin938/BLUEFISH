@@ -1,0 +1,11 @@
+- name: YUM install the 'MATE Desktop' package group from EPEL
+  yum:
+    name: "@mate-desktop-environment"
+    enablerepo: epel
+    state: present
+    update_cache: yes
+  register: yum_rc
+  retries: 10
+  until: yum_rc is succeeded
+  delay: 5
+

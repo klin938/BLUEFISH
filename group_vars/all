@@ -15,11 +15,51 @@
 # roles/A_ROLE/vars/main.yml
 #
 
-#######################################################################
+########################################################################################################
+###
+### SECURITY SETTINGS
+###
+#########################################################################################################
+
+
+########################################################################################################
+###
+### NETWORKING & CONFIG
+###
+########################################################################################################
+
+############################
+##
+## ROLE: nw_xrdp
+##
+##############################
+
+# The corresponding desktop env will be installed and configured
+# as default GUI for xRDP. On R815, MATE feels quicker...
+#
+# Support value:
+#
+#      mate-session
+#      xfce4-session
+
+xrdp_wm: 'mate-session'
+
+############################
+##
+## ROLE: nw_ipv6_disable
+##
+#############################
+
+# roles/nw_ipv6_disable/vars/main.yml
+
+############################
 ##
 ## ROLE: nw_dice_vlan
 ##
-########################################################################
+############################
+
+# roles/nw_dice_vlan/vars/main.yml
+
 config_dice_vlan_8021q_tagging: false
 
 #dice_vlan_8021q_trunk_dev: 'emX'
@@ -51,22 +91,11 @@ config_dice_vlan_untagged: false
 #    dev: 'ethX'
 #    ip: '192.168.40.xx'
 
-#######################################################################
-##
-## ROLE: nw_mlnx_ofed
-##
-#######################################################################
-install_mlnx_ofed: false
-
-#mlnx_ofed_version: 'MLNX_OFED_LINUX-5.4-1.0.3.0-rhel7.9-x86_64'
-#mlnx_ofed_tgz_path: "/share/apps/install/{{ mlnx_ofed_version }}.tgz"
-mlnx_ofed_installer_opts: '--without-fw-update --force'
-
-#######################################################################
+############################
 ##
 ## ROLE: nw_linux_bonding
 ##
-#######################################################################
+############################
 config_cx4_lx: false
 cx4_lx_bond_netmask: '255.255.0.0'
 cx4_lx_bond_opts: 'mode=802.3ad miimon=100 xmit_hash_policy=layer3+4'
@@ -88,17 +117,38 @@ cx4_lx_bond_mtu: '9000'
 #
 cx4_lx_bond_dev_file: '{{ ansible_env.HOME }}/cx4_lx_bond_dev'
 
-#######################################################################
+############################
 ##
-## ROLE: nw_linux_bonding
+## ROLE: nw_dice_lldp
 ##
-########################################################################
+############################
 dice_lldp_dev_file: '{{ ansible_env.HOME }}/dice_lldp_dev'
 
-#######################################################################
+########################################################################################################
+###
+### HARDWARE, DEVICES & DRIVERS
+###
+#########################################################################################################
+
+############################
+##
+## ROLE: nw_mlnx_ofed
+##
+#############################
+
+# NOTE nic's logical name may change after the mlnx_ofed driver
+# installed. You may want to install mlnx_ofed driver manually
+# prior running the bluefish deployment.
+install_mlnx_ofed: false
+#
+#mlnx_ofed_version: 'MLNX_OFED_LINUX-5.4-1.0.3.0-rhel7.9-x86_64'
+#mlnx_ofed_tgz_path: "/share/apps/install/{{ mlnx_ofed_version }}.tgz"
+mlnx_ofed_installer_opts: '--without-fw-update --force'
+
+############################
 ## 
 ## ROLE: hw_dell_dsu
 ##
-#######################################################################
+############################
 install_dsu: false
 install_omsa: false

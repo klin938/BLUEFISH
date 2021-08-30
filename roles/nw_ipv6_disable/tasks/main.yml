@@ -1,0 +1,9 @@
+- name: IPv6 disabled via sysctl
+  sysctl:
+    name: '{{ item.key }}'
+    value: '{{ item.value }}'
+    sysctl_set: yes
+    state: present
+    reload: yes
+    ignoreerrors: yes
+  with_dict: '{{ ipv6_sysctl_settings }}'

@@ -1,6 +1,9 @@
 - include: install_xfce.yml
   when: xrdp_wm == "xfce4-session"
 
+- include: install_mate.yml
+  when: xrdp_wm == "mate-session"
+
 - name: YUM install xrdp from EPEL
   yum:
     name: xrdp
