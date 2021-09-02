@@ -6,6 +6,22 @@
     inventory_hostname: exia.garvan.unsw.edu.au
   vars_files:
     - group_vars/all
+
+  pre_tasks:
+    - name: YUM install the 'Development tools' package group
+      yum:
+        name: "@Development tools"
+        state: present
+        update_cache: yes
+
+    - name: YUM install Java, JDK etc
+      yum:
+        name:
+          - java-1.8.0-openjdk
+          - icedtea-web
+        state: present
+        update_cache: yes
+
   roles:
     - repo_rocks_wolfpack
     - fs_autofs
@@ -95,6 +111,7 @@
         name:
           - htop
           - net-tools
+          - bind-utils
         state: present
         update_cache: yes
         enablerepo: epel

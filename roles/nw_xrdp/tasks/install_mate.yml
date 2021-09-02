@@ -1,11 +1,19 @@
 - name: YUM install the 'MATE Desktop' package group from EPEL
-  yum:
-    name: "@mate-desktop-environment"
-    enablerepo: epel
-    state: present
-    update_cache: yes
-  register: yum_rc
-  retries: 10
-  until: yum_rc is succeeded
-  delay: 5
+  command: "yum groupinstall -y 'MATE Desktop' --enablerepo=epel"
+  args:
+    warn: false
+
+# YUM module could not install MATE Desktop, it just hangs for
+# long time reason unknown. So use command module instead.
+#
+#- name: YUM install the 'MATE Desktop' package group from EPEL
+#  yum:
+#    name: "@MATE Desktop"
+#    enablerepo: epel
+#    state: present
+#    update_cache: yes
+#  register: yum_rc
+#  retries: 10
+#  until: yum_rc is succeeded
+#  delay: 5
 
