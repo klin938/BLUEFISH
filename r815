@@ -116,6 +116,28 @@
         update_cache: yes
         enablerepo: epel
 
+    - name: FIREWALLD configure services such as HTTP/HTTPS
+      firewalld:
+        zone: public
+        service: "{{ item }}"
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items:
+        - http
+        - https
+        - dns
+
+    - name: FIREWALLD configure ports for nagios etc
+      firewalld:
+        zone: public
+        port: "{{ item }}"
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items:
+        - '18888/tcp'
+        
     - name: NetworkManager disabled the service
       service:
         name: NetworkManager
