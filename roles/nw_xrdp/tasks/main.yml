@@ -30,11 +30,17 @@
     mode: 0755
   notify: restart xrdp
 
-- name: xRDP configure DefaultWindowManager in sesman.ini
+- name: xRDP sesman.ini configure DefaultWindowManager
   lineinfile:
     path: /etc/xrdp/sesman.ini
     regexp: '^DefaultWindowManager='
     line: 'DefaultWindowManager=/etc/xrdp/startwm-bash.sh'
+
+- name: xRDP xrdp.ini change max_bpp (default 32) to 24 for supporting Java applet display
+  lineinfile:
+    path: /etc/xrdp/xrdp.ini
+    regexp: '^max_bpp='
+    line: 'max_bpp=24'
 
 - name: FIREWALLD configure rule for RDP/3389
   firewalld:
