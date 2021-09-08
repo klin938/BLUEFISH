@@ -112,10 +112,60 @@
           - htop
           - net-tools
           - bind-utils
+          - mailx
         state: present
         update_cache: yes
         enablerepo: epel
 
+    - name: POSTFIX Garvan SMTP relay main.cf
+      command: postconf -e "{{ item.key }}"="{{ item.value }}"
+      with_items:
+        - { key: 'mydomain', value: 'local' }
+        - { key: 'mydestination', value: '$mydomain, $myhostname, localhost.$mydomain, localhost' }
+        - { key: 'mynetworks', value: '127.0.0.0/8, 10.0.0.0/16, 192.168.10.0/24, 192.168.11.0/24, 192.168.12.0/24, 192.168.20.0/24, 192.168.30.0/24, 192.168.40.0/24, 192.168.50.0/24, 192.168.60.0/24' }
+        - { key: 'inet_interfaces', value: 'all' }
+        - { key: 'append_dot_mydomain', value: 'no' }
+        - { key: 'sender_canonical_maps', value: 'hash:/etc/postfix/sender-canonical' }
+        - { key: 'recipient_canonical_maps', value: 'hash:/etc/postfix/recipient-canonical' }
+        - { key: 'relayhost', value: 'smtp.garvan.unsw.edu.au:25' }
+        - { key: 'relay_domains', value: 'garvan.org.au' }
+      notify: restart postfix
+
+    - name: POSTFIX Garvan SMTP relay sender-canonical
+      blockinfile:
+        dest: /etc/postfix/sender-canonical
+        marker: "### {mark} ANSIBLE MANAGED BLOCK"
+        block: |
+          @local @exia
+        create: yes
+      notify: restart postfix
+
+    - name: POSTFIX Garvan SMTP relay generate sender-canonical db
+      command: postmap hash:/etc/postfix/sender-canonical
+      notify: restart postfix
+
+    - name: POSTFIX Garvan SMTP relay recipient-canonical
+      blockinfile:
+        dest: /etc/postfix/recipient-canonical
+        marker: "### {mark} ANSIBLE MANAGED BLOCK"
+        block: |
+          root@garvan.unsw.edu.au root
+        create: yes
+      notify: restart postfix
+
+    - name: POSTFIX Garvan SMTP relay generate recipient-canonical db
+      command: postmap hash:/etc/postfix/recipient-canonical
+      notify: restart postfix
+    
+    - name: /etc/aliases config pwbc_admin email address
+      blockinfile:
+        dest: /etc/aliases
+        marker: "### {mark} ANSIBLE MANAGED BLOCK"
+        block: |
+          root:   pwbc_admin@garvan.org.au
+        create: yes
+      notify: restart postfix
+ 
     - name: FIREWALLD configure services such as HTTP/HTTPS
       firewalld:
         zone: public
@@ -127,6 +177,8 @@
         - http
         - https
         - dns
+        - smtp
+        - smtps
 
     - name: FIREWALLD configure ports for nagios etc
       firewalld:
