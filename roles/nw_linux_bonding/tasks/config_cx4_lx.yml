@@ -7,10 +7,37 @@
     mode: 0644
   notify: restart network
 
-- name: ConnectX-4 Lx read the list of slave dev
-  command: cat "{{ cx4_lx_bond_dev_file }}"
-  register: cx4_lx_bond_dev
+#
+# ANSIBLE 101 PADMIN-40
+# This is a tricky one due to how Ansible treats the register variable
+# inside a skipped task. A skipped task still modify/override the variable
+# with some meta data information, instead of leaving the variable untouch.
+# This is not a very common sense but Ansible insists this is the right way.
+#
+# https://github.com/ansible/ansible/issues/4297 
+#
+- name: ConnectX-4 Lx get the list of bonding devices from a cmd
+  shell: "{{ cx4_lx_bond_dev_cmd }}"
+  register: bond_dev
   changed_when: false
+
+#
+# The output is stored in a separated variable which will be handled by
+# set_fact. Do NOT use the same variable as even the task is skipped, the
+# variable will be override with some meta data information.
+#
+- name: ConnectX-4 Lx get the list of bonding devices from a file
+  command: cat "{{ cx4_lx_bond_dev_file }}"
+  register: bond_dev_from_file
+  when: cx4_lx_bond_dev_file is defined
+  changed_when: false
+
+- set_fact:
+     bond_dev: "{{ bond_dev_from_file }}"
+  when: cx4_lx_bond_dev_file is defined
+
+- debug:
+    msg: "{{ bond_dev }}"
 
 - name: ConnectX-4 Lx bond slave ifcfg deploy
   template:
@@ -20,6 +47,6 @@
     group: root
     mode: 0644
   with_items:
-    - "{{ cx4_lx_bond_dev.stdout_lines }}"
+    - "{{ bond_dev.stdout_lines }}"
   notify: restart network
 

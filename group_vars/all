@@ -15,6 +15,14 @@
 # roles/A_ROLE/vars/main.yml
 #
 
+# TRICK: ANSIBLE101 PADMIN-40
+#
+# Some host specific variables such as IP etc are not easy to hardcode inside a playbook which likely to
+# be a general one in cluster deployment. These variables can be provided in ansible command on-the-fly:
+#
+# ansible-playbook -i inventory_albacore/ ./albacore_ceph_mon_R640_config --extra-vars "target=mds-6-28.local cx4_lx_bond_ip=10.0.1.188"
+#
+
 ########################################################################################################
 ###
 ### SECURITY SETTINGS
@@ -104,18 +112,18 @@ cx4_lx_bond_mtu: '9000'
 #cx4_lx_bond_ip: 10.0.1.188
 
 #
-# A list of participant nic, generally can be found by running:
+# Provide a list of logical device names (one per line) which will be the bonding
+# participants. For example:
 #
-# lshw -class network | grep -A5 'ConnectX-4' | grep 'logical'
+# eth1
+# eth2
 # 
-# The file should strictly contain interface's logical name ONLY,
-# one per line such as:
-#
-# p1p1
-# p1p2
-# p1p3
-#
-cx4_lx_bond_dev_file: '{{ ansible_env.HOME }}/cx4_lx_bond_dev'
+# The list can be provided via two ways: a commandline which generates a list as
+# its output, or a static file which contains the list of devices. File is optional
+# BUT if it is provided, it will take precedence over the commandline.
+cx4_lx_bond_dev_cmd: "lshw -class network | grep -A5 'ConnectX-4' | grep 'logical' | awk -F ':' '{print $2}' | awk '{$1=$1};1'" # last awk removes any whitespace
+
+#cx4_lx_bond_dev_file: '{{ ansible_env.HOME }}/cx4_lx_bond_dev'
 
 ############################
 ##
