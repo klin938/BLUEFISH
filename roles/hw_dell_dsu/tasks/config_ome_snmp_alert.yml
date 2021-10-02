@@ -1,0 +1,30 @@
+- name: iDRAC get version
+  command: /opt/dell/srvadmin/bin/omreport system version
+  register: idrac_ver
+  changed_when: false
+
+- debug:
+    msg: "{{ idrac_ver.stdout }}"
+
+- name: racadm enable SNMP alert to OME server
+  command: /opt/dell/srvadmin/sbin/racadm set {{ item.obj }} {{ item.val }}
+  when: idrac_ver.stdout.find('iDRAC9') != -1
+  with_items:
+    - { obj: 'idrac.IPMILan.AlertEnable', val: '1' }
+    - { obj: 'idrac.IPMILan.CommunityName', val: 'dice-mgr-network' }
+    - { obj: 'idrac.IPMILan.Enable', val: '1'  }
+    - { obj: 'idrac.SNMPAlert.1.Destination', val: '192.168.30.202' }
+    - { obj: 'idrac.SNMPAlert.1.State', val: '1' }
+
+- name: racadm select the event categories
+  command: /opt/dell/srvadmin/sbin/racadm eventfilters set -c {{ item.obj }} -a {{ item.action }} -n {{ item.notify }}
+  when: idrac_ver.stdout.find('iDRAC9') != -1
+  with_items:
+    - { obj: 'idrac.alert.system.critical', action: 'none', notify: 'snmp' }
+    - { obj: 'idrac.alert.system.warning', action: 'none', notify: 'snmp' }
+    - { obj: 'idrac.alert.storage.critical', action: 'none', notify: 'snmp' }
+    - { obj: 'idrac.alert.storage.warning', action: 'none', notify: 'snmp' }
+    - { obj: 'idrac.alert.config.critical', action: 'none', notify: 'snmp' }
+    - { obj: 'idrac.alert.config.warning', action: 'none', notify: 'snmp' }
+  ignore_errors: true
+

@@ -160,3 +160,5 @@ mlnx_ofed_installer_opts: '--without-fw-update --force'
 ############################
 install_dsu: false
 install_omsa: false
+config_ome_snmp_alert: false
+config_om_thrmshutdown: false

@@ -1,9 +1,23 @@
-- name: YUM deploy DELL DSU repository
+- name: YUM check if Dell DSU repository is available
+  yum:
+    list: srvadmin-all
+    update_cache: yes
+  register: yum_rc
+  changed_when: false
+  ignore_errors: true
+
+- name: YUM setup DELL DSU repository
   script: install_dell_repo.sh
+  when: yum_rc is not succeeded
 
 - include: install_dsu.yml
   when: install_dsu
 
 - include: install_omsa.yml
-  when: install_omsa
+  when: install_omsa or config_ome_snmp_alert or config_om_thrmshutdown
 
+- include: config_ome_snmp_alert.yml
+  when: config_ome_snmp_alert
+
+- include: config_om_thrmshutdown.yml
+  when: config_om_thrmshutdown

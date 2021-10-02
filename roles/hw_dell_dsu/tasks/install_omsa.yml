@@ -8,3 +8,9 @@
   retries: 10
   until: yum_rc is succeeded
   delay: 5
+
+- name: OMSA services restart (srvadmin-services)
+  shell: "/opt/dell/srvadmin/sbin/srvadmin-services.sh restart"
+  changed_when: false
+  ignore_errors: true
+

@@ -1,0 +1,11 @@
+- name: OpenManager get thrmshutdown status
+  command: /opt/dell/srvadmin/bin/omreport system thrmshutdown
+  register: thrmshutdown
+  changed_when: false
+
+- debug:
+    msg: "{{ thrmshutdown.stdout }}"
+
+- name: OpenManager enable thrmshutdown
+  command: /opt/dell/srvadmin/bin/omconfig system thrmshutdown severity=warning
+  when: thrmshutdown.stdout.find("Disabled") != -1
