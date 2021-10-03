@@ -1,3 +1,8 @@
+- name: SNMP configure snmpd.conf from template
+  template: src=snmpd.conf.omsa.j2 dest=/etc/snmp/snmpd.conf
+            owner=root group=root mode=0600
+  notify: restart snmpd
+
 - name: iDRAC get version
   command: /opt/dell/srvadmin/bin/omreport system version
   register: idrac_ver
