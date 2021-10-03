@@ -130,7 +130,16 @@ cx4_lx_bond_dev_cmd: "lshw -class network | grep -A5 'ConnectX-4' | grep 'logica
 ## ROLE: nw_dice_lldp
 ##
 ############################
-dice_lldp_dev_file: '{{ ansible_env.HOME }}/dice_lldp_dev'
+
+#
+# Provide a list of logical device names which will have the LLDP configured. The
+# default cmd finds all interfaces exclude lo and any logically bonding devices.
+#
+# Optional static file contains list of dev can be used, if provided, it will take
+# precedence and override the cmd result.
+dice_lldp_dev_cmd: "ls /sys/class/net/ | grep -v 'lo\\|bond' | awk '{$1=$1};1'"
+
+#dice_lldp_dev_file: '{{ ansible_env.HOME }}/dice_lldp_dev'
 
 ########################################################################################################
 ###
