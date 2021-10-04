@@ -54,3 +54,18 @@ dice_vlans:
     network: '192.168.60.0'
     netmask: '255.255.255.0'
     mtu: 1500
+  vlan_255:
+    common_name: 'MLNX_Storage'
+    id: 255
+    prefix: 16
+    network: '10.0.0.0'
+    netmask: '255.255.0.0'
+    mtu: 9000
+  vlan_201:
+    common_name: 'ceph_osd'
+    id: 201
+    prefix: 24
+    network: '10.0.201.0'
+    netmask: '255.255.255.0'
+    mtu: 9000
+
