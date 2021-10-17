@@ -18,3 +18,11 @@
 
 - name: MLNX_OFED installing the driver
   command: "/tmp/{{ mlnx_ofed_version }}/mlnxofedinstall {{ mlnx_ofed_installer_opts }}"
+
+- name: HPC-X installing Mellanox HPC-X Toolkit
+  unarchive:
+    src: "{{ mlnx_hpcx_tbz_path }}"
+    dest: /opt
+
+- name: HPC-X rename installed directory
+  command: mv "/opt/{{ mlnx_hpcx_version }}" "/opt/hpcx"

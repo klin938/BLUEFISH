@@ -158,9 +158,12 @@ dice_lldp_dev_cmd: "ls /sys/class/net/ | grep -v 'lo\\|bond' | awk '{$1=$1};1'"
 # prior running the bluefish deployment.
 install_mlnx_ofed: false
 #
-#mlnx_ofed_version: 'MLNX_OFED_LINUX-5.4-1.0.3.0-rhel7.9-x86_64'
-#mlnx_ofed_tgz_path: "/share/apps/install/{{ mlnx_ofed_version }}.tgz"
+mlnx_ofed_version: 'MLNX_OFED_LINUX-5.4-1.0.3.0-rhel7.9-x86_64'
+mlnx_ofed_tgz_path: "/share/apps/install/{{ mlnx_ofed_version }}.tgz"
 mlnx_ofed_installer_opts: '--without-fw-update --force'
+
+mlnx_hpcx_version: 'hpcx-v2.9.0-gcc-MLNX_OFED_LINUX-5.4-1.0.3.0-redhat7.9-x86_64'
+mlnx_hpcx_tbz_path: "/share/apps/install/{{ mlnx_hpcx_version }}.tbz"
 
 ############################
 ## 
