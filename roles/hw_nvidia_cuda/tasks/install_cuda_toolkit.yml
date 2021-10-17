@@ -1,0 +1,6 @@
+- debug:
+    msg: "{{ cuda_runfile_opts }}"
+
+- name: CUDA RUNFILE installing Toolkit with the provided installer opts
+  command: bash {{ cuda_runfile_path }} {{ cuda_runfile_opts }}
+

@@ -147,6 +147,18 @@ dice_lldp_dev_cmd: "ls /sys/class/net/ | grep -v 'lo\\|bond' | awk '{$1=$1};1'"
 ###
 #########################################################################################################
 
+
+############################
+##
+## ROLE: hw_nvidia_cuda
+##
+#############################
+install_cuda_toolkit: false
+install_cuda_driver: false
+cuda_runfile: 'cuda_11.4.2_470.57.02_linux.run'
+cuda_runfile_path: "/share/apps/install/{{ cuda_runfile }}"
+cuda_runfile_opts: '--silent --toolkit --samples --samplespath=/opt/NVIDIA --run-nvidia-xconfig'
+
 ############################
 ##
 ## ROLE: nw_mlnx_ofed

@@ -1,0 +1,5 @@
+- include: install_cuda_toolkit.yml
+  when: install_cuda_toolkit|bool
+
+- include: install_cuda_driver.yml
+  when: install_cuda_driver|bool
