@@ -1,0 +1,5 @@
+- include: install_ias.yml
+  when: install_ias|bool
+
+- include: test_ias.yml
+  when: test_ias|bool

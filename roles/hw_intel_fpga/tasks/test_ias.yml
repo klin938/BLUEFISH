@@ -1,0 +1,3 @@
+- name: IAS performaing FPGA card diagnostics tests
+  script: ias_dev_test.sh
+  changed_when: false

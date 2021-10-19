@@ -1,0 +1,31 @@
+#!/usr/bin/expect -f
+
+set installer_path [lindex $argv 0];
+set install_dest [lindex $argv 1];
+
+set timeout 300
+
+#spawn /root/a10_gx_pac_ias_1_2_1_pv_dev_installer/setup.sh
+spawn "$installer_path/setup.sh"
+
+expect -re ".*(Y\/n).*"
+send -- "\r"
+
+expect -re ".*(Y\/n).*"
+send -- "\r"
+
+expect -re ".*(Y\/n).*"
+send -- "\r"
+
+send -- "q"
+
+expect -re ".*(Y\/n).*"
+send -- "\r"
+
+expect -re ".*default:.*"
+send -- "$install_dest\r"
+
+expect -re ".*default:.*"
+send -- "\r"
+
+expect eof

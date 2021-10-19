@@ -1,0 +1,24 @@
+- name: IAS package unarchived to /tmp
+  unarchive:
+    src: "{{ ias_pkg_path }}"
+    dest: /tmp
+
+- name: YUM enabling EPEL repository
+  command: yum-config-manager --enable epel && yum makecache
+
+# expect ./ias_dev_installer.exp /tmp/a10_gx_pac_ias_1_2_1_pv_dev_installer /opt/intelstack
+# ANSIBLE101 string concat with variable
+- name: IAS running installation expect script
+  script: ias_dev_installer.exp "{{ '/tmp/' + ias_pkg_version + '_installer' }}" /opt/inteldevstack 
+
+- name: YUM disabling EPEL repository
+  command: yum-config-manager --disable epel
+
+- name: IAS adding init_env.sh to run by rc.local at boot
+  lineinfile:
+    path: /etc/rc.d/rc.local
+    line: 'source /opt/inteldevstack/init_env.sh'
+    owner: root
+    group: root
+    mode: 0744
+

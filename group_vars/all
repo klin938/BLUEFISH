@@ -147,6 +147,18 @@ dice_lldp_dev_cmd: "ls /sys/class/net/ | grep -v 'lo\\|bond' | awk '{$1=$1};1'"
 ###
 #########################################################################################################
 
+############################
+##
+## ROLE: hw_intel_fpga
+##
+#############################
+install_ias: false
+ias_pkg_version: 'a10_gx_pac_ias_1_2_1_pv_dev'
+ias_pkg_path: "/share/apps/install/{{ ias_pkg_version }}.tar.gz"
+ias_inst_opts: "DUMMY"
+
+# enable only if Intel A10 FPGA installed
+test_ias: false
 
 ############################
 ##
