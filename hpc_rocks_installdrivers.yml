@@ -1,0 +1,43 @@
+- hosts: '{{ target }}'
+  vars:
+    ansible_connection: local
+    ansible_python_interpreter: "{{ansible_playbook_python}}"
+    inventory_hostname: '{{ target }}'
+  vars_files:
+    - group_vars/all
+
+  pre_tasks:
+    - name: GPGPU detecting any CUDA-Capable GPU
+      shell: lspci | grep -i nvidia
+      register: nv_gpu_detected
+      changed_when: false
+      ignore_errors: true
+
+    - name: FPGA detecting Intel A10 PAC FPGA
+      shell: lspci | grep -i 09c[45]
+      register: fpga_a10_detected
+      changed_when: false
+      ignore_errors: true
+
+    - name: MLNX detecting any OFED compatible devices
+      shell: lshw -class network | grep -i 'MT27710'
+      register: ofed_dev_detected
+      changed_when: false
+      ignore_errors: true
+
+  roles:
+    - role: common
+
+    - role: nw_mlnx_ofed
+      vars:
+        install_mlnx_ofed: "{{ 'true' if ofed_dev_detected is success else 'false' }}"
+        mlnx_ofed_installer_opts: '--force --with-neohost-backend'
+
+    - role: hw_nvidia_cuda
+      vars:
+        install_cuda_driver: "{{ 'true' if nv_gpu_detected is success else 'false' }}" # ANSIBLE101 conditional var assign
+
+    - role: hw_intel_fpga
+      vars:
+        install_ias: "{{ 'true' if fpga_a10_detected is success else 'false' }}"
+

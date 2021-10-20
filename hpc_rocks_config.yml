@@ -1,0 +1,63 @@
+- hosts: '{{ target }}'
+  vars:
+    ansible_connection: local
+    ansible_python_interpreter: "{{ansible_playbook_python}}"
+    inventory_hostname: '{{ target }}'
+  vars_files:
+    - group_vars/all
+
+  pre_tasks:
+    - name: FPGA detecting Intel A10 PAC FPGA
+      shell: lspci | grep -i 09c[45]
+      register: fpga_a10_detected
+      changed_when: false
+      ignore_errors: true
+
+    - name: NIC detecting any Mellanox ConnectX-4 Lx
+      shell: lshw -class network | grep -i 'ConnectX-4 Lx'
+      register: mlnx_cx4_lx_detected
+      changed_when: false
+      ignore_errors: true
+
+    - name: YUM install essential packages
+      yum:
+        name:
+          - centos-release-scl
+          - htop
+        state: present
+        update_cache: yes
+        enablerepo: extras,epel
+      register: yum_res
+      retries: 10
+      until: yum_res is succeeded
+      delay: 5
+
+    - name: YUM install devtoolset from SCLo repository
+      yum:
+        name:
+          - devtoolset-8
+        state: present
+        update_cache: yes
+        enablerepo: centos-sclo-rh
+      register: yum_res
+      retries: 10
+      until: yum_res is succeeded
+      delay: 5
+
+  roles:
+    - role: common
+
+    - role: nw_linux_bonding
+      vars:
+        config_cx4_lx: "{{ 'true' if mlnx_cx4_lx_detected is success else 'false' }}"
+        # For Dell C6145 device fb0 appears as an extra logical name reported by lshw (possibly comes from its
+        # integrated AST2050 video card) there is no fix so we will just exclude this from the search result.
+        cx4_lx_bond_dev_cmd: "lshw -class network | grep -A5 'ConnectX-4' | grep 'logical' | grep -v '/dev/fb0' | awk -F ':' '{print $2}' | awk '{$1=$1};1'"
+
+    - role: hw_nvidia_cuda
+      vars:
+        install_cuda_toolkit: true
+
+    - role: hw_intel_fpga
+      vars:
+        test_ias: "{{ 'true' if fpga_a10_detected is success else 'false' }}"
