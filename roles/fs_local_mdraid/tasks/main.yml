@@ -1,0 +1,2 @@
+- include: config_local_mdraid.yml
+  when: config_local_mdraid|bool

@@ -141,6 +141,52 @@ dice_lldp_dev_cmd: "ls /sys/class/net/ | grep -v 'lo\\|bond' | awk '{$1=$1};1'"
 
 #dice_lldp_dev_file: '{{ ansible_env.HOME }}/dice_lldp_dev'
 
+
+########################################################################################################
+###
+### Storage, File System etc
+###
+#########################################################################################################
+
+
+############################
+##
+## ROLE: fs_local_mdraid
+##
+#############################
+config_local_mdraid: false
+
+#
+# this is an example of selecting a list of block devices for MDRAID, assuming the OS drive is sda and 
+# it has been excluded. String '/dev/' is appended to each dev and the last tr transforms the multiple
+# lines result into a single line separated by space. So it produces something like:
+#
+# /dev/sdb /dev/sdc /dev/sdd /dev/sde
+#
+# /dev/nvme0n1 /dev/nvme1n1 /dev/nvme2n1 /dev/nvme3n1 /dev/nvme4n1 /dev/nvme5n1 /dev/nvme6n1 /dev/nvme7n1 /dev/nvme8n1 /dev/nvme9n1
+#
+local_mdraid_dev_cmd: "lsblk | grep disk | grep -Ev 'sda' | awk '{print $1}' | awk '$0=\"/dev/\"$0' | tr '\n' ' '"
+#
+# A static file can be provided as the alternative source, it must contain the output like above only.
+#
+#local_mdraid_dev_file: '/root/mdraid_dev'
+
+local_mdraid_dev_name: 'md127'
+local_mdraid_level: '0'
+#
+# This is the partition label, note that the lable is different between SAS/SATA and NVMe for example:
+#
+# SAS : sdb1 sdc1 (so the value is '1')
+# NVMe: nvme2n1p1 nvme3n1p1 (so the value is 'p1')
+#
+local_mdraid_part_suffix: 'p1'
+
+# Provide a full command for creating a File System on the created MD RAID device. For example:
+#
+# /sbin/mkfs.xfs -i projid32bit=1 -K -L mkraid_xfs /dev/md127 -f
+#
+local_mdraid_mk_fs_cmd: "echo -e 'DO NOT CREATE FILE SYSTEM\n'"
+
 ########################################################################################################
 ###
 ### HARDWARE, DEVICES & DRIVERS

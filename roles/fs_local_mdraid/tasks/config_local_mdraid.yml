@@ -1,0 +1,57 @@
+- name: MDRAID get the list of target block devices from a cmd
+  shell: "{{ local_mdraid_dev_cmd }}"
+  register: mdraid_dev
+  changed_when: false
+
+# ANSIBLE101
+# The register variable still get modified/override even
+# the task is conditionally skipped. Store the output in
+# a separated variable, it will be accessed and assigned
+# by set_fact accordingly.
+#
+- name: MDRAID get the list of target block devices from a file
+  command: cat "{{ local_mdraid_dev_file }}"
+  register: mdraid_dev_from_file
+  when: local_mdraid_dev_file is defined
+  changed_when: false
+
+- set_fact:
+    mdraid_dev: "{{ mdraid_dev_from_file }}"
+  when: local_mdraid_dev_file is defined
+
+- name: DEBUG printing the full command for assembling MDRAID array
+  debug:
+    msg: "mk_md_raid.sh {{ local_mdraid_dev_name }} {{ local_mdraid_level }} {{ local_mdraid_part_suffix }} {{ mdraid_dev.stdout }}"
+
+- name: MDRAID executing array assembling script
+  script: mk_md_raid.sh {{ local_mdraid_dev_name }} {{ local_mdraid_level }} {{ local_mdraid_part_suffix }} {{ mdraid_dev.stdout }}
+  register: mk_md_raid
+  changed_when: "'no change required' not in mk_md_raid.stdout" #ANSIBLE101 task change status according to script output
+  failed_when: "mk_md_raid.rc != 0"
+
+- name: DEBUG printing the output from mk_md_raid.sh
+  debug:
+    var: mk_md_raid.stdout
+
+- name: DEBUG printing the full command for creating the file system
+  debug:
+    var: local_mdraid_mk_fs_cmd
+
+- name: MDRAID creating file system on the new MD RAID device
+  shell: "{{ local_mdraid_mk_fs_cmd }}"
+  when:
+    - "mk_md_raid.rc == 0"
+    - "'no change required' not in mk_md_raid.stdout"
+
+- name: MDRAID deploying del_md_raid.sh to /root
+  copy:
+    src: ./files/del_md_raid.sh
+    dest: /root/del_md_raid.sh
+    owner: root
+    group: root
+    mode: 0744
+
+- name: INFO the created new MDRAID array can be destroyed by
+  debug:
+    msg: "/root/del_md_raid.sh MOUNT_POINT {{ local_mdraid_dev_name }} {{ local_mdraid_part_suffix }} {{ mdraid_dev.stdout }}"
+
