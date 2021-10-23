@@ -15,41 +15,37 @@ PARTSUFFIX="$3"
 # rest of args should be just the block dev which will be put
 # in a new array.
 set -- "${@:4}"
-MD_DISKS=( "$@" )
-NUM_MD_DISKS="${#MD_DISKS[@]}"
+DISKS=( "$@" )
+NUM_DISKS="${#DISKS[@]}"
 
-printf "INFO: [$NUM_MD_DISKS] block devices selected for MD RAID:\n"
-printf '%s\n' "${MD_DISKS[@]}"
+printf "INFO: [$NUM_DISKS] block devices selected for MD RAID:\n"
+printf '%s\n' "${DISKS[@]}"
 
 if [ ! -e /dev/$MD_DEV_NAME ]; then
 
 	printf "INFO: /dev/$MD_DEV_NAME does not exist, proceeding to the array assembling.\n"
 
-	# Linux block dev numbering starts from zero/0 so
-	# need to adjust the ending of the loop range. 
-	END="$(( $NUM_MD_DISKS - 1 ))"
-
-	for i in $(seq 0 $END);
+	for i in "${DISKS[@]}";
 	do
-		if [ ! -e ${MD_DISKS[$i]}$PARTSUFFIX ]; then
-			printf "INFO: ${MD_DISKS[$i]}$PARTSUFFIX does not exist, new partition will be created on ${MD_DISKS[$i]}.\n"
-			parted -s ${MD_DISKS[$i]} "mklabel gpt" "mkpart primary 1 -1" "set 1 raid on"
+		if [ ! -e $i$PARTSUFFIX ]; then
+			printf "INFO: $i$PARTSUFFIX does not exist, new partition will be created on ${i}.\n"
+			parted -s $i "mklabel gpt" "mkpart primary 1 -1" "set 1 raid on"
 			sleep 5
 		else
-			printf "SKIPPED: ${MD_DISKS[$i]}$PARTSUFFIX partition exists, no change required.\n"
+			printf "SKIPPED: $i$PARTSUFFIX partition exists.\n"
 		fi	
 		
-		mdadm --zero-superblock ${MD_DISKS[$i]}$PARTSUFFIX --force
-		array_disks="$array_disks ${MD_DISKS[$i]}$PARTSUFFIX"
+		mdadm --zero-superblock $i$PARTSUFFIX --force
+		array_disks="$array_disks $i$PARTSUFFIX"
 	done
 	
 	printf "INFO: assembling MD RAID, MD_DEV: [/dev/$MD_DEV_NAME] RAID_LEVEL: [$MD_RAID_LEVEL] RAID_MEMBER: [$array_disks]\n"
 
 	if [[ "$MD_RAID_LEVEL" -eq 1 ]]; then
-		expect -c "set timeout 10" -c "spawn /sbin/mdadm -C /dev/$MD_DEV_NAME -l $MD_RAID_LEVEL -n $NUM_MD_DISKS $array_disks" \
+		expect -c "set timeout 10" -c "spawn /sbin/mdadm -C /dev/$MD_DEV_NAME -l $MD_RAID_LEVEL -n $NUM_DISKS $array_disks" \
 			-c "expect -re \"Continue.*\"" -c "send \"yes\r\"" -c "expect eof"
 	else
-		mdadm -C /dev/$MD_DEV_NAME -l $MD_RAID_LEVEL -n $NUM_MD_DISKS $array_disks --force
+		mdadm -C /dev/$MD_DEV_NAME -l $MD_RAID_LEVEL -n $NUM_DISKS $array_disks --force
 	fi
 
 	sleep 5

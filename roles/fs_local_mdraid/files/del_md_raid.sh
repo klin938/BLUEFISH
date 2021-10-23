@@ -15,8 +15,8 @@ PARTSUFFIX="$3"
 # rest of args should be just the block dev which will be put
 # in a new array.
 set -- "${@:4}"
-MD_DISKS=( "$@" )
-NUM_MD_DISKS="${#MD_DISKS[@]}"
+DISKS=( "$@" )
+NUM_DISKS="${#DISKS[@]}"
 
 umount -f $MOUNT_POINT
 sleep 5
@@ -24,7 +24,7 @@ sleep 5
 mdadm --stop /dev/$MD_DEV_NAME
 sleep 5
 	
-for i in "${MD_DISKS[@]}";
+for i in "${DISKS[@]}";
 do
 	printf "INFO: mdadm zeroing superblock of $i$PARTSUFFIX.\n"
 	mdadm --zero-superblock $i$PARTSUFFIX --force
