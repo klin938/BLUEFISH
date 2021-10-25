@@ -1,0 +1,28 @@
+- name: JBOD get the list of target block devices from a cmd
+  shell: "{{ local_jbod_dev_cmd }}"
+  register: jbod_dev
+  changed_when: false
+
+# ANSIBLE101
+# The register variable still get modified/override even
+# the task is conditionally skipped. Store the output in
+# a separated variable, it will be accessed and assigned
+# by set_fact accordingly.
+#
+- name: JBOD get the list of target block devices from a file
+  command: cat "{{ local_jbod_dev_file }}"
+  register: jbod_dev_from_file
+  when: local_jbod_dev_file is defined
+  changed_when: false
+
+- set_fact:
+    jbod_dev: "{{ jbod_dev_from_file }}"
+    when: local_jbod_dev_file is defined           
+#
+# Technically the HDFS storage configration is not a real JBOD,
+# these are just a collection of standalone disks with EXT4 FS.
+# We still put it under JBOD role to avoiding having too many
+# Ansible role.
+#
+- include: config_local_hdfs.yml
+  when: config_local_hdfs|bool

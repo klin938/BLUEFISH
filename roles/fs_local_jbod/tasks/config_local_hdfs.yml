@@ -1,0 +1,37 @@
+- name: DEBUG printing the full command for assembling HDFS storage
+  debug:
+    msg: "mk_hdfs_disk.sh {{ local_jbod_part_suffix }} {{ local_jbod_ext_label }} {{ jbod_dev.stdout }}"
+
+- name: JBOD executing HDFS storage assembling script
+  script: mk_hdfs_disk.sh {{ local_jbod_part_suffix }} {{ local_jbod_ext_label }} {{ jbod_dev.stdout }}
+  register: mk_hdfs_disk
+  changed_when: "'no change required' not in mk_hdfs_disk.stdout" #ANSIBLE101 task change status according to script output
+  failed_when: "mk_hdfs_disk.rc != 0"
+
+- name: DEBUG printing the output from mk_hdfs_disk.sh
+  debug:
+    var: mk_hdfs_disk.stdout
+
+- name: JBOD deploying HDFS storage helper scripts to /root
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: 0744
+  with_items:
+    - { src: './files/del_hdfs_disk.sh', dest: '/root/del_hdfs_disk.sh' }
+    - { src: './files/mnt_hdfs_disk.sh', dest: '/root/mnt_hdfs_disk.sh' }
+
+- name: INFO the HDFS storage can be mounted by
+  debug:
+    msg: "/root/mnt_hdfs_disk.sh mount {{ local_jbod_hdfs_mnt_prefix }} {{ local_jbod_part_suffix }} {{ jbod_dev.stdout }}"
+
+- name: INFO the HDFS storage can be umounted by
+  debug:
+    msg: "/root/mnt_hdfs_disk.sh umount {{ local_jbod_hdfs_mnt_prefix }} {{ local_jbod_part_suffix }} {{ jbod_dev.stdout }}"
+
+- name: INFO the created new HDFS storage can be destroyed by
+  debug:
+    msg: "/root/del_hdfs_disk.sh {{ local_jbod_part_suffix }} {{ jbod_dev.stdout }}"
+
