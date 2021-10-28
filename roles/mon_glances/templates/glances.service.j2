@@ -1,0 +1,15 @@
+[Unit]
+Description=Glances
+After=network.target
+
+[Service]
+# Actions does not work in server mode, so stdout mode is used
+# as a temp workaround. 
+#ExecStart=/usr/local/bin/glances -s
+ExecStart=/usr/local/bin/glances --stdout cpu.user,mem.used,load
+Restart=on-abort
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+
