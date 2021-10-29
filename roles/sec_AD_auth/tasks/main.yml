@@ -1,4 +1,4 @@
-- name: Install Samba
+- name: YUM installing Samba
   yum:
     name:
       - samba
@@ -8,39 +8,45 @@
       - samba-winbind-clients
     state: present
 
-- name: Ensure Winbind is started and enabled on boot
-  service: name=winbind state=started enabled=yes
+- name: SYSTEMD enabling and starting winbind as a service
+  systemd:
+    name: winbind
+    state: started
+    enabled: yes
 
-- name: Configure Samba as a domain member
+- name: SAMBA deploying smb.conf from a template
   template: src=smb.conf.j2 dest=/etc/samba/smb.conf
             owner=root group=root mode=644
   notify: restart samba
 
-- name: Ensure Samba is started and enabled on boot
-  service: name=smb state=started enabled=yes
+- name: SYSTEMD enabling and starting smb as a service
+  systemd:
+    name: smb
+    state: started
+    enabled: yes
 
-- name: Join AD with Samba to generate the keytab
+- name: KRB5 join AD with Samba to generate the keytab
   command: /usr/bin/net ads join -U "{{ adauth_username }}"%"{{ adauth_password }}" --no-dns-updates
   args:
     creates: /etc/krb5.keytab
 
 #
-## Pause for few seconds mainly for DC to be ready to accept kinit requrest.
+# Pause for few seconds mainly for DC to be ready to accept kinit requrest.
 #
 - pause: seconds=15
 
-- name: Install Kerberos and LDAP clients
+- name: YUM installing Kerberos and LDAP clients
   yum:
     name:
       - krb5-workstation
       - openldap-clients
     state: present
 
-- name: Configure Kerberos integration with AD
+- name: KRB5 deploying krb5.conf from a template
   template: src=krb5.conf.j2 dest=/etc/krb5.conf
             owner=root group=root mode=644
 
-- name: Get kerberos ticket with the sambe keytab
+- name: KRB5 getting a kerberos ticket with the samba keytab
   command: kinit -k -t /etc/krb5.keytab {{ ansible_hostname | regex_replace('\.local','') | upper }}\$\@{{ adauth_realm }}
   args:
     creates: /tmp/krb5cc_0
@@ -58,29 +64,32 @@
 ##
 ## Autofs will block it from even attempting to create a new directory in /home/users.
 #
-- name: Install SSSD and related
+- name: YUM installing SSSD etc
   yum:
     name:
       - sssd
       - authconfig
     state: present
 
-- name: Check if authconfig did a previous run
+- name: authconfig checking if has been run previously
   command: "/bin/egrep '^auth.*sufficient.*pam_sss.so' /etc/pam.d/system-auth"
   register: authconfig_run
   changed_when: false
   ignore_errors: true
 
-- name: Configure server to use SSSD for authentication 
+- name: authconfig configuring to use SSSD for login auth
   command: /usr/sbin/authconfig --enablesssd --enablesssdauth --updateall --nostart
   #when: authconfig_run.stdout.find("pam_sss.so") == -1
   when: authconfig_run.rc != 0
   notify: restart authconfig dependent
 
-- name: Configure SSSD to use AD for authentication
+- name: SSSD configuring to use AD backend
   template: src=sssd.conf.j2 dest=/etc/sssd/sssd.conf
             owner=root group=root mode=0600
   notify: restart sssd
 
-- name: Ensure SSSD is started and enabled on boot
-  service: name=sssd state=started enabled=yes
+- name: SYSTEMD enabling and starting sssd as a service
+  systemd:
+    name: sssd
+    state: started
+    enabled: yes
