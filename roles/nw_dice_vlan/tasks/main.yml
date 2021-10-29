@@ -1,5 +1,12 @@
 - include: dice_vlan_8021q_tagging.yml
-  when: config_dice_vlan_8021q_tagging
+  when: config_dice_vlan_8021q_tagging|bool
 
 - include: dice_vlan_untagged.yml
-  when: config_dice_vlan_untagged
+  when: config_dice_vlan_untagged|bool
+
+# Some later tasks may depend on the proper networking (such
+# as LLDP) so trigger the network to restart immediately. Note
+# that this triggers any handlers that have been notified at 
+# that point in the play. So it will flush all other handlers
+# from other roles which have been executed.
+- meta: flush_handlers
