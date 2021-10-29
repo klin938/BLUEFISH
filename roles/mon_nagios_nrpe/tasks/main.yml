@@ -1,0 +1,51 @@
+- name: YUM install nagios plugins packages from EPEL
+  yum:
+    name:
+      - nrpe
+      - nagios-plugins-users
+      - nagios-plugins-load
+      - nagios-plugins-swap
+      - nagios-plugins-disk
+      - nagios-plugins-procs
+      - nagios-plugins-perl
+      - sas2ircu
+    state: present
+    enablerepo: epel 
+  register: yum_res
+  retries: 10
+  until:  yum_res is succeeded
+  delay: 5
+
+- name: SUDOER configure rule for nrpe runner from template
+  template: src=nrpe.sudoers.j2 dest=/etc/sudoers.d/nrpe
+            owner=root group=root mode=0440
+
+- name: NAGIOS copy additional plugins to remote host
+  copy: src={{ item }} dest=/usr/lib64/nagios/plugins/{{ item }}
+        owner=root group=root mode=0755
+  with_items:
+    - check_sas2ircu 
+    - check_md_raid
+
+- name: NRPE configure to allow communication from Nagios server
+  lineinfile:
+    path: /etc/nagios/nrpe.cfg
+    state: present
+    regexp: '^allowed_hosts='
+    line: 'allowed_hosts=127.0.0.1,10.0.0.0/16'
+  notify: restart nrpe
+            
+- name: NRPE add plugins command to nrpe.cfg
+  lineinfile:
+    dest: /etc/nagios/nrpe.cfg
+    insertafter: '^command\[check_total_procs\]'
+    line: "{{ item.command }}"
+  with_items:
+    - { command: 'command[check_sas2ircu]=/usr/bin/sudo /usr/lib64/nagios/plugins/check_sas2ircu' }
+    - { command: 'command[check_md_raid]=/usr/bin/sudo /usr/lib64/nagios/plugins/check_md_raid' }
+    - { command: 'command[check_sda1]=/usr/lib64/nagios/plugins/check_disk -w 20% -c 10% -p /dev/sda1' }
+  notify: restart nrpe
+
+- name: NRPE ensure is started and enabled on boot
+  service: name=nrpe state=started enabled=yes
+

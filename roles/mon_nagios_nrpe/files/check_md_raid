@@ -1,0 +1,50 @@
+#!/bin/bash
+
+count_md=0
+count_active=0
+count_inactive=0
+count_unknown=0
+count_recovery=0
+
+# accept dummy mdstat file for debugging purposes
+MDSTAT="${1:-/proc/mdstat}"
+
+while read -r dev; do
+	(( count_md +=1 ))
+	
+	md="$(echo $dev | awk '{print $1}')"
+	stat="$(echo $dev | awk '{print $3}')"
+	
+	#printf "MD: $md [STAT: $stat]\n"
+	
+	if [ "$stat" == "active" ];
+	then
+		(( count_active += 1 ))
+	elif [ "$stat" == "inactive" ];
+	then
+		(( count_inactive += 1 ))
+	else
+		(( count_unknown += 1 ))
+	fi
+done < <(grep ^md $MDSTAT)
+
+count_recovery="$(grep recovery $MDSTAT | wc -l)"
+
+# report CRITCAL events first
+if [ $count_inactive -gt 0 ] || [ $count_unknown -gt 0 ];
+then
+	STATUS="CRITICAL - Checked [$count_md] arrays | ACTIVE [$count_active] | FAILED [$count_inactive] | UNKNOWN [$count_unknown]"
+	EXIT=2
+# report recovery as warning event
+elif [ $count_recovery -gt 0 ];
+then
+        STATUS="WARNING - Checked [$count_md] arrays | ACTIVE [$count_active] | RECOVERY [$count_recovery]"
+        EXIT=1
+else
+	STATUS="OK - Checked [$count_md] arrays | ACTIVE [$count_active]"
+	EIXT=0
+fi
+
+# Status and quit
+echo $STATUS
+exit $EXIT
