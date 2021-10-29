@@ -1,2 +1,9 @@
 - include: config_cx4_lx.yml
-  when: config_cx4_lx
+  when: config_cx4_lx|bool
+
+# Some later tasks may depends on proper networking.
+# So we trigger the network restart now. Note that
+# this triggers any handlers that have been notified
+# at that point in the play (so other handlers from
+# other roles will also get triggered.)
+- meta: flush_handlers
