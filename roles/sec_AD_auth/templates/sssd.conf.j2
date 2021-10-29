@@ -27,7 +27,7 @@ ad_server = {{ adauth_pdc }}
 ad_backup_server = {{ adauth_sdc }}
 
 access_provider = simple
-simple_allow_groups = g_dice_wolfpack
+simple_allow_groups = {{ AD_auth_sssd_simple_allow_groups }}
 
 #access_provider = ldap
 #ldap_access_order = filter, expire
