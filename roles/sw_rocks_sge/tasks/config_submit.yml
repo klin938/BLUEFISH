@@ -1,0 +1,3 @@
+- name: submit_host sge_request deploying script from template
+  template: src=sge_request.j2 dest=/opt/gridengine/default/common/sge_request
+            owner=sge group=sge mode=0644

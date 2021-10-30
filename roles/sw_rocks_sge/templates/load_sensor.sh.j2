@@ -1,0 +1,53 @@
+# ----------------< tmpspace.sh >-----------------------------
+#!/bin/sh
+# Grid Engine will automatically start/stop this script on exec hosts, if
+# configured properly. See the application note for configuration
+# instructions.
+# fs to check
+
+#
+# {{ ansible_managed }}
+#
+
+FS=/scratch_local
+# Get POSIX df on SunOS
+[ -d /usr/xpg4/bin ] && PATH=/usr/xpg4/bin:$PATH
+
+if [ "$SGE_ROOT" != "" ]; then
+   root_dir=$SGE_ROOT
+fi
+
+# invariant values
+myarch=`$root_dir/util/arch`
+myhost=`$root_dir/utilbin/$myarch/gethostname -name`
+
+ende=false
+while read input; do
+
+   if [ "$input" = quit ]; then
+      break
+   fi
+
+   # ----------------------------------------
+   # send mark for begin of load report
+   # NOTE: for global consumable resources not attached
+   # to each machine (ie. floating licenses), the load
+   # sensor only needs to be run on one host. In that case,
+   # echo the string 'global' instead of '$myhost'.
+   echo "begin"
+
+   # -P ensures filesystem info all on one line with long fields (e.g.
+   # long server names).
+   dfoutput=`df -P -k $FS | tail -1`
+   tmpfree=`echo $dfoutput | awk '{print $4}'`
+   tmptot=`echo $dfoutput | awk '{print $2}'`
+   tmpused=`echo $dfoutput | awk '{print $3}'`
+
+   echo "$myhost:tmpfree:${tmpfree}k"
+   echo "$myhost:tmptot:${tmptot}k"
+   echo "$myhost:tmpused:${tmpused}k"
+
+   echo end
+done
+
+#----------------------< CUT HERE >--------------------------------

@@ -1,0 +1,22 @@
+    
+- name: ROCKS reading the node's submit_host Rocks attr
+  shell: "/opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep 'submit_host' | awk '{print $3}'"
+  register: submit_host
+  changed_when: false
+  ignore_errors: true
+
+- name: ROCKS reading the node's exec_host Rocks attr
+  shell: "/opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep 'exec_host' | awk '{print $3}'"
+  register: exec_host
+  changed_when: false
+  ignore_errors: true
+  
+- name: INFO printing cluster node's SGE Rocks attr
+  debug:
+    msg: "submit_host: {{ submit_host.stdout }} | exec_host: {{ exec_host.stdout }}"
+    
+- include: config_submit.yml
+  when: submit_host.stdout == 'true'
+
+- include: config_exec.yml
+  when: exec_host.stdout == 'true'

@@ -1,0 +1,21 @@
+- name: exec_host load_sensor deploying sensor from template
+  template: src=load_sensor.sh.j2 dest=/opt/gridengine/default/common/load_sensor.sh
+            owner=sge group=sge mode=0755
+
+- name: exec_host prolog script deploying script from template
+  template: src=prolog_exec.sh.j2 dest=/opt/gridengine/default/common/prolog_exec.sh
+            owner=root group=root mode=0755
+
+- name: exec_host host complex updating hc value
+  script: sge_update_hc.sh {{ inventory_hostname }} {{ item }}
+  register: sge_update_hc
+  changed_when: "sge_update_hc.rc == 0"
+  failed_when: "sge_update_hc.rc == 1"
+  retries: 10
+  until: sge_update_hc.rc != 1
+  delay: 20 
+  with_items:
+    - nvgpu
+    - fast_dm
+    - mem_requested
+    - tmp_requested

@@ -1,0 +1,53 @@
+#!/bin/bash
+
+#
+# {{ ansible_managed }}
+#
+
+exec >> /tmp/prolog_exec_"$JOB_ID"_"$SGE_TASK_ID".log
+exec 2>&1
+
+#
+# The follow variables are prepared by qsub, qmaster and JSV
+# NOTE: TMPDIR is not available in PROLOG in SGE 8.1.9.
+#
+# $JOB_ID $tmp_requested $TMP
+#
+# xfs_quota -x -c 'project -s -p $TMP $JOB_ID' $SGE_TMP_ROOT
+# xfs_quota -x -c 'limit -p bhard=$tmp_requested $JOB_ID' $SGE_TMP_ROOT
+#
+
+SGE_TMP_ROOT="/scratch_local"
+
+pe_num=$(cat "$PE_HOSTFILE" | grep "$HOSTNAME" | awk '{print $2}')
+
+tmp_req_var=$(echo "$tmp_requested" | grep -o -E '[0-9]+')
+tmp_req_unit=$(echo "$tmp_requested" | sed 's/[0-9]*//g')
+
+if [ -z "$pe_num" ]; then
+        quota="$tmp_requested"
+else
+        quota=$(expr "$tmp_req_var" \* "$pe_num")"$tmp_req_unit"
+fi
+
+echo "############################# [$HOSTNAME PROLOG] - JOB_ID:$JOB_ID TASK_ID:$SGE_TASK_ID #############################"
+echo "`date` [$HOSTNAME PROLOG]: xfs_quota -x -c 'project -s -p $TMP $JOB_ID' $SGE_TMP_ROOT"
+echo "`date` [$HOSTNAME PROLOG]: xfs_quota -x -c 'limit -p bhard=$quota $JOB_ID' $SGE_TMP_ROOT"
+
+xfs_quota_rc=0
+
+/usr/sbin/xfs_quota -x -c "project -s -p $TMP $JOB_ID" "$SGE_TMP_ROOT"
+((xfs_quota_rc+=$?))
+
+/usr/sbin/xfs_quota -x -c "limit -p bhard=$quota $JOB_ID" "$SGE_TMP_ROOT"
+((xfs_quota_rc+=$?))
+
+if [ "$xfs_quota_rc" -eq 0 ]; then
+	exit 0
+else
+	exit 100 # Put job in error state
+fi
+
+#
+# XFS wil remove the quota automatically once the $TMP is deleted by SGE
+#
