@@ -1,2 +1,2 @@
 - include: install_mlnx_ofed.yml
-  when: install_mlnx_ofed
+  when: install_mlnx_ofed|bool
