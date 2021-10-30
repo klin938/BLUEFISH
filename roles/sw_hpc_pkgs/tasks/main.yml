@@ -1,0 +1,155 @@
+- name: SCL repo installing Software Collections repository
+  yum:
+    name:
+      - centos-release-scl
+    state: present
+    update_cache: yes
+    enablerepo: extras
+  register: yum_res
+  retries: 10
+  until: yum_res is succeeded
+  delay: 5
+
+- name: YUM getting all enabled repos
+  command: "/usr/bin/yum repolist"
+  register: yum_repos
+  changed_when: false
+  ignore_errors: true
+
+- name: SCL repo disabling Software Collections repo by default
+  command: yum-config-manager --disable "{{ item }}"
+  when: yum_repos.stdout.find(item) != -1
+  with_items:
+    - centos-sclo-sclo
+    - centos-sclo-rh
+
+- name: YUM installing packages from local Rocks repos
+  yum:
+    name:
+      - atlas-devel.x86_64
+      - atlas.x86_64
+      - autogen
+      - boost-devel.x86_64
+      - boost.x86_64
+      - cifs-utils
+      - cmake
+      - compat-dapl-devel
+      - compat-gcc-44
+      - compat-gcc-44-c++
+      - compat-gcc-44-gfortran
+      - compat-glibc
+      - compat-glibc-headers
+      - compat-libcap1.x86_64
+      - compat-libgfortran-41.x86_64
+      - compat-libstdc++-33.x86_64
+      - dbus-x11
+      - dejagnu
+      - ecj
+      - expat-devel.x86_64
+      - freeglut-devel.x86_64
+      - freeglut.x86_64
+      - gcc-c++
+      - git
+      - glibc-devel.i686
+      - glibc-static.x86_64
+      - gmp-devel.x86_64
+      - gnome-vfs2-devel.x86_64
+      - gnuplot.x86_64
+      - graphviz-devel.x86_64
+      - graphviz.x86_64
+      - gsl-devel.x86_64
+      - gsl.x86_64
+      - gvfs-fuse
+      - gvfs-smb
+      - icu.x86_64
+      - ImageMagick-devel.x86_64
+      - ImageMagick.x86_64
+      - iotop
+      - jdk1.8.0_101
+      - libcurl-devel.x86_64
+      - liberation-mono-fonts
+      - liberation-sans-fonts
+      - liberation-serif-fonts
+      - libffi-devel.x86_64
+      - libgnomecanvas-devel.x86_64
+      - libgnomeui-devel.x86_64
+      - libicu-devel.x86_64
+      - libicu.x86_64
+      - libmpc
+      - libmpc-devel
+      - libstdc++.i686
+      - libtool
+      - libunwind
+      - libxslt-devel.x86_64
+      - libxslt.x86_64
+      - links
+      - mercurial
+      - mpfr-devel.x86_64
+      - mysql-devel
+      - nano
+      - perf
+      - readline-devel.x86_64
+      - samba-client
+      - screen.x86_64
+      - singularity
+      - sqlite-devel.x86_64
+      - squashfs-tools
+      - subversion.x86_64
+      - tcl-devel.x86_64
+      - texlive
+      - texlive-dvips
+      - texlive-latex
+      - tk-devel.x86_64
+      - tokyocabinet-devel.x86_64
+      - tokyocabinet.x86_64
+      - vim-enhanced
+      - vim-enhanced
+      - vim-filesystem
+      - vim-X11
+      - xerces-c-devel.x86_64
+      - xerces-c.x86_64
+      - xz-devel.x86_64
+      - zlib-static.x86_64
+    state: present
+    update_cache: yes
+
+- name: YUM installing packages from EPEL
+  yum:
+    name:
+      - ack
+      - fio
+      - globus-openssl-module
+      - globus-openssl-module-devel
+      - golang
+      - hdf5
+      - librsync
+      - librsync-devel
+      - ncftp
+      - nload
+      - openblas
+      - openblas-devel
+      - parallel
+      - reptyr
+      - sparsehash-devel
+      - VirtualGL
+      - xqilla-devel.x86_64
+      - xqilla.x86_64
+    state: present
+    update_cache: yes
+    enablerepo: epel
+  register: yum_res
+  retries: 10
+  until: yum_res is succeeded
+  delay: 5
+
+- include: install_devtoolset.yml
+  when: install_devtoolset|bool
+
+- include: install_perl.yml
+  when: install_perl|bool
+
+- include: install_python.yml
+  when: install_python|bool
+
+- include: install_intel_oneAPI.yml
+  when: install_intel_oneAPI|bool

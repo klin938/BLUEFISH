@@ -1,0 +1,23 @@
+- name: PYTHON installing OS python3 packages from local Rocks repos
+  yum:
+    name:
+      - python3
+      - python3-devel
+    state: present
+    update_cache: yes
+  register: yum_res
+  retries: 10
+  until: yum_res is succeeded
+  delay: 5
+
+- name: PYTHON installing python36 from SCL repo
+  yum:
+    name:
+      - rh-python36
+    state: present
+    update_cache: yes
+    enablerepo: centos-sclo-rh
+  register: yum_res
+  retries: 10
+  until: yum_res is succeeded
+  delay: 5

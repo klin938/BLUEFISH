@@ -1,0 +1,13 @@
+- name: devtoolset installing devtoolset-7, 8 from SCL repo
+  yum:
+    name:
+      - devtoolset-7
+      - devtoolset-8
+    state: present
+    update_cache: yes
+    enablerepo: centos-sclo-rh
+  register: yum_res
+  retries: 10
+  until: yum_res is succeeded
+  delay: 5
+

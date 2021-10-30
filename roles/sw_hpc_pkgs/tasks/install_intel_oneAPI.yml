@@ -1,0 +1,26 @@
+- name: YUM check if Intel oneAPI repository is available
+  yum:
+    list: intel-basekit
+    update_cache: yes
+  register: yum_rc
+  changed_when: false
+  ignore_errors: true
+
+- name: Intel oneAPI repo deploying repo file to /etc/yum.repos.d
+  template:
+    src: oneAPI.repo.j2
+    dest: /etc/yum.repos.d/oneAPI.repo
+  when: yum_rc is not succeeded
+
+# Do not specify enablerepo here because we pull the entire oneAPI repo and
+# make it available locally via Rocks roll. On a none cluster node, repo file
+# is installed and the online repo is enabled by default.
+- name: Intel oneAPI installing Intel basekit and hpckit
+  yum:
+    name:
+      - intel-basekit
+      - intel-hpckit
+    state: present
+    update_cache: yes
+
+

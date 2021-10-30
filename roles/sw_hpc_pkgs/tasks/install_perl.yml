@@ -1,0 +1,17 @@
+- name: PERL installing OS perl packages from local Rocks repos
+  yum:
+    name:
+      - perl-CPAN
+      - perl-Pod-Coverage
+      - perl-Pod-Escapes
+      - perl-Pod-POM
+      - perl-Pod-Simple
+      - perl-Pod-Spell
+      - perl-XML-LibXML
+      - perl-XML-NamespaceSupport
+      - perl-XML-SAX
+      - perl-XML-Simple
+    state: present
+    update_cache: yes
+
+
