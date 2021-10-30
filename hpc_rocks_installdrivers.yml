@@ -12,6 +12,24 @@
     - group_vars/all
 
   pre_tasks:
+    - name: ROCKS getting the cluster name
+      shell: /opt/rocks/bin/rocks list host attr {{ target }} | grep "Info_ClusterName" | awk '{print $3}'
+      register: rocks_Info_ClusterName
+      changed_when: false
+      ignore_errors: true
+
+    - name: ROCKS getting the host's appliance type
+      shell: /opt/rocks/bin/rocks list host attr {{ target }} | grep "appliance" | awk '{print $3}'
+      register: rocks_appliance
+      changed_when: false
+      ignore_errors: true
+
+    - name: ROCKS getting the host's cluster private IP
+      shell: /opt/rocks/bin/rocks list host interface {{ target }} | grep 'private' | awk '{print $4}'
+      register: rocks_private_ip
+      changed_when: false
+      ignore_errors: true
+
     - name: GPGPU detecting any CUDA-Capable GPU
       shell: lspci | grep -i nvidia
       register: nv_gpu_detected
@@ -81,6 +99,15 @@
   roles:
     - role: common
 
+    - role: hw_dell_dsu
+      vars:
+        install_dsu: true
+        install_omsa: true
+        config_ome_snmp_alert: true
+        config_om_thrmshutdown: true
+      when:
+        - vendor.stdout == "Dell Inc."
+
     - role: nw_mlnx_ofed
       vars:
         install_mlnx_ofed: "{{ 'true' if ofed_dev_detected is success else 'false' }}"
@@ -146,3 +173,8 @@
           bash /root/mnt_hdfs_disk.sh umount {{ local_jbod_hdfs_mnt_prefix }} {{ local_jbod_part_suffix }} {{ jbod_dev.stdout }}
           bash /root/del_hdfs_disk.sh {{ local_jbod_part_suffix }} {{ jbod_dev.stdout }}
       when: config_local_hdfs|bool
+
+    - name: INFO printing cluster node basic info
+      debug:
+        msg: "{{ rocks_Info_ClusterName.stdout }} | {{ target }} | {{ rocks_private_ip.stdout }} | {{ rocks_appliance.stdout }} | {{ vendor.stdout }} | {{ model.stdout }}"
+
