@@ -9,20 +9,40 @@
     - group_vars/all
 
   pre_tasks:
+
+    - include_role:
+        name: common
+
+    - name: ROCKS getting rocks_ansible_version set in Rocks attr
+      shell: /opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep "rocks_ansible_version" | awk '{print $3}'
+      register: rocks_ansible_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: dice_bluefish_deploy version verification - FAILED
+      fail:
+        msg: "FAILED | Git Repo {{ dice_bluefish_deploy_ver.stdout }} | Rocks attr {{ rocks_ansible_version.stdout }}"
+      when: dice_bluefish_deploy_ver.stdout != rocks_ansible_version.stdout
+
+    - name: dice_bluefish_deploy version verification - OK
+      debug:
+        msg: "OK | Git Repo {{ dice_bluefish_deploy_ver.stdout }} | Rocks attr {{ rocks_ansible_version.stdout }}"
+      changed_when: false
+
     - name: ROCKS getting the cluster name
-      shell: /opt/rocks/bin/rocks list host attr {{ target }} | grep "Info_ClusterName" | awk '{print $3}'
+      shell: /opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep "Info_ClusterName" | awk '{print $3}'
       register: rocks_Info_ClusterName
       changed_when: false
       ignore_errors: true
 
     - name: ROCKS getting the host's appliance type
-      shell: /opt/rocks/bin/rocks list host attr {{ target }} | grep "appliance" | awk '{print $3}'
+      shell: /opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep "appliance" | awk '{print $3}'
       register: rocks_appliance
       changed_when: false
       ignore_errors: true
 
     - name: ROCKS getting the host's cluster private IP
-      shell: /opt/rocks/bin/rocks list host interface {{ target }} | grep 'private' | awk '{print $4}'
+      shell: /opt/rocks/bin/rocks list host interface {{ inventory_hostname }} | grep 'private' | awk '{print $4}'
       register: rocks_private_ip
       changed_when: false
       ignore_errors: true
@@ -40,8 +60,6 @@
       ignore_errors: true
 
   roles:
-    - role: common
-    
     #
     # nw_linux_bonding dose flush_handlers in its play so that 
     # proper networking is operational. Since flush_handlers triggers
@@ -86,8 +104,18 @@
         mon_glances_conf_profile: "{{ rocks_appliance.stdout }}"
 
     - role: mon_nagios_nrpe
-
+    
   post_tasks:
+
+    - include_role:
+        name: sw_rocks_sge
+      when: inventory_hostname in groups['sge-submit_host'] or
+            inventory_hostname in groups['sge-exec_host']
+
+    - include_role:
+        name: sw_hdp_ambari
+      when: inventory_hostname in groups['ambari-agent'] or
+            inventory_hostname in groups['ambari-server']
 
     - name: YUM installing common essential packages from extras and EPEL repos
       yum:
@@ -151,9 +179,10 @@
       when: rocks_appliance.stdout.find('compute') != -1
       notify: restart sshd
 
+    # 
     - name: systemctl Compute node restarting SGE sgeexecd
       command: systemctl restart sgeexecd.*
-      when: rocks_appliance.stdout.find('compute') != -1
+      when: inventory_hostname in groups['sge-exec_host']
 
     - name: MANPATH getting the list of man paths inserted to /etc/man.config by Rocks rolls
       command: "awk '{ print $2 }' /etc/man.config"
@@ -172,3 +201,9 @@
     - name: INFO printing cluster node basic info
       debug:
         msg: "{{ rocks_Info_ClusterName.stdout }} | {{ target }} | {{ rocks_private_ip.stdout }} | {{ rocks_appliance.stdout }} | {{ vendor.stdout }} | {{ model.stdout }}"
+
+    - name: dice_bluefish_deploy COMPLETED, recording deployed version in /root/rocks_ansible_version
+      copy:
+        dest: "/root/rocks_ansible_version"
+        content: "{{ dice_bluefish_deploy_ver.stdout }}"
+

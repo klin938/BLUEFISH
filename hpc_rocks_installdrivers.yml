@@ -12,21 +12,31 @@
     - group_vars/all
 
   pre_tasks:
+
+    - include_role:
+        name: common
+
     - name: ROCKS getting the cluster name
-      shell: /opt/rocks/bin/rocks list host attr {{ target }} | grep "Info_ClusterName" | awk '{print $3}'
+      shell: /opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep "Info_ClusterName" | awk '{print $3}'
       register: rocks_Info_ClusterName
       changed_when: false
       ignore_errors: true
 
     - name: ROCKS getting the host's appliance type
-      shell: /opt/rocks/bin/rocks list host attr {{ target }} | grep "appliance" | awk '{print $3}'
+      shell: /opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep "appliance" | awk '{print $3}'
       register: rocks_appliance
       changed_when: false
       ignore_errors: true
 
     - name: ROCKS getting the host's cluster private IP
-      shell: /opt/rocks/bin/rocks list host interface {{ target }} | grep 'private' | awk '{print $4}'
+      shell: /opt/rocks/bin/rocks list host interface {{ inventory_hostname }} | grep 'private' | awk '{print $4}'
       register: rocks_private_ip
+      changed_when: false
+      ignore_errors: true
+
+    - name: ROCKS getting disk_raid_lvl config from Rocks attr
+      shell: /opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep 'disk_raid_lvl' | awk '{print $3}'
+      register: disk_raid_lvl
       changed_when: false
       ignore_errors: true
 
@@ -45,12 +55,6 @@
     - name: MLNX detecting any OFED compatible devices
       shell: lshw -class network | grep -i 'MT27710'
       register: ofed_dev_detected
-      changed_when: false
-      ignore_errors: true
-
-    - name: LOCAL DISK getting disk_raid_lvl config from Rocks attr
-      shell: /opt/rocks/bin/rocks list host attr {{ target }} | grep 'disk_raid_lvl' | awk '{print $3}'
-      register: disk_raid_lvl
       changed_when: false
       ignore_errors: true
 
@@ -97,7 +101,6 @@
         - chkconfig post_boot_script.sh on
 
   roles:
-    - role: common
 
     - role: hw_dell_dsu
       vars:
@@ -143,6 +146,7 @@
         local_jbod_ext_label: 'hdfs_ext4'
 
   post_tasks:
+
     - name: LOCAL DISK {{ local_mdraid_dev_name }} adding command for mounting to /scratch_local
       blockinfile:
         path: /etc/rc.d/init.d/post_boot_script.sh
