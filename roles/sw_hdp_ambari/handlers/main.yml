@@ -1,2 +1,5 @@
+- name: restart ambari-server
+  shell: ambari-server restart
+
 - name: restart ambari-agent
   service: name=ambari-agent state=restarted

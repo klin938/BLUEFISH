@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+spawn ambari-server setup
+
+expect "Customize user account*"
+send -- "\r"
+
+expect "OK to continue*"
+send -- "\r"
+
+expect "Enter choice*"
+send -- "\r"
+
+expect "Do you accept*"
+send -- "\r"
+
+expect "Enable Ambari Server*"
+send -- "\r"
+
+expect "Enter advanced database*"
+send -- "\r"
+
+expect "*completed successfully*" {
+	expect eof
+	exit 0
+}
+
+exit 1

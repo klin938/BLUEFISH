@@ -1,0 +1,34 @@
+- name: YUM installing ambari-agent etc
+  yum:
+    name:
+      - ambari-agent
+    state: present
+    
+- name: ambari-agent configuring from template ini
+  template: src=ambari-agent.ini.{{ ambari_cluster_name }}.j2 dest=/etc/ambari-agent/conf/ambari-agent.ini
+            owner=root group=root mode=0644
+  notify: restart ambari-agent
+
+- name: ambari-agent set host_script (see ambari-agent.ini)
+  template: src=ambari_agent_hostname.sh.j2 dest=/etc/ambari-agent/conf/ambari_agent_hostname.sh
+            owner=root group=root mode=0744
+            
+- name: Hadoop node installing custom topology script to /etc/hadoop/conf/
+  copy:
+    src: ../files/hdfs_rack_topology.sh
+    dest: /etc/hadoop/conf/
+    owner: root
+    group: root
+    mode: 0755
+
+- name: HDFS node cleaning up hard drives for new deployment
+  shell: rm -rf /d?/*
+  when: inventory_hostname in groups['hdfs_host']
+
+- name: HDFS node set hostname to mlx network DNS for new deployment
+  shell: hostname $(/etc/ambari-agent/conf/ambari_agent_hostname.sh)
+  when: inventory_hostname in groups['hdfs_host']
+
+- name: dice_host_utils generate and deploy ambari common env script to /root/
+  template: src=dice_host_utils_ambari_common.sh.j2 dest=/root/ambari_common.sh
+            owner=root group=root mode=0744

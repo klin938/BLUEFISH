@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#
+# {{ ansible_managed }}
+#
+
+DICE_HOST_UTILS="{{ dice_host_utils }}"
+
+AMBARI_USER="{{ amb_admin }}"
+AMBARI_PASSWORD="{{ amb_password }}"
+AMBARI_API="{{ amb_api_v1_url }}"
+
+CLUSTER_NAME="{{ ambari_cluster_name }}"
+HOSTNAME="$({{ amb_hostname_script }})"
+
+declare -a MASTER_CMPNTS=({{ amb_master_components }})
+
+if [ $(curl -s -S -f -u $AMBARI_USER:$AMBARI_PASSWORD -H "X-Requested-By: ambari" -X GET $AMBARI_API -o /dev/null -w '%{http_code}\n') == "200" ]
+then
+        printf "INFO: AMBARI is up and running. API URL: [$AMBARI_API]\n"
+else
+        printf "ERROR: AMBARI is NOT running. API URL: [$AMBARI_API]\n"
+        exit 2
+fi
+
+# exit 0 not required here as this script is meant to
+# be sourced by all other ambari related scripts.

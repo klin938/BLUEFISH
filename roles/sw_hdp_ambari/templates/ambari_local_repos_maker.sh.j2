@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#
+# {{ ansible_managed }}
+#
+
+# ambari-2.4.2.0
+# HDP-2.5.3.0
+PKG_NAME=$1
+
+WEB_SERVER_DIR=/var/www/html
+INSTALL_SRC_DIR={{ install_src_dir }}
+
+REPOS_PATH="$WEB_SERVER_DIR"/"$PKG_NAME"
+
+if [ ! -d "$REPOS_PATH" ]; then
+	echo "Repos path $REPOS_PATH not exist, unpacking repos tar ball. State changed."
+	mkdir -p "$REPOS_PATH"
+	cd "$REPOS_PATH"
+	tar xvf "$INSTALL_SRC_DIR"/"$PKG_NAME"-*.tar.gz
+	exit $?
+else
+	echo "Repos path $REPOS_PATH found. State not changed."
+	exit 0
+fi

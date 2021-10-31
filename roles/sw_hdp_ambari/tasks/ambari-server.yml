@@ -1,0 +1,47 @@
+- name: YUM installing ambari-server, HTTPD etc
+  yum:
+    name:
+      - ambari-server
+      - httpd
+      - mysql-connector-java
+    state: present
+   
+- name: ambari-server deploy ambari_local_repos_maker.sh script
+  template: src=ambari_local_repos_maker.sh.j2 dest=/etc/ambari-server/conf/ambari_local_repos_maker.sh
+            owner=root group=root mode=0744
+
+#
+# The script expects tar ball available from:
+#
+# /share/apps/install/ambari-2.7.3.0-centos7.tar.gz
+# /share/apps/install/HDP-3.1.0.0-centos7-rpm.tar.gz
+# /share/apps/install/HDP-UTILS-1.1.0.22-centos7.tar.gz
+#
+- name: ambari-server setup HDP local repositories
+  command: ./ambari_local_repos_maker.sh {{ item }}
+  args:
+    chdir: /etc/ambari-server/conf/
+  register: script_result
+  failed_when: "script_result.rc != 0"
+  changed_when: "'State changed' in script_result.stdout"
+  with_items:
+    - ambari-2.7.3.0
+    - HDP-3.1.0.0
+    - HDP-UTILS-1.1.0.22
+
+- name: ambari-server configuring to use local HDP repos by default
+  template: src=repoinfo.xml.HDP-3.1.0.j2 dest=/var/lib/ambari-server/resources/stacks/HDP/3.1/repos/repoinfo.xml
+            owner=root group=root mode=0755
+
+- name: HTTPD ensure local repos started and enabled on boot
+  service: name=httpd state=started enabled=yes
+
+- name: ambari-server running expect script for setup
+  script: ambari_server_setup.exp
+  notify: restart ambari-server
+
+- pause: seconds=10
+
+- name: ambari-server adding MySQL Java Connector JAR
+  command: ambari-server setup --jdbc-db=mysql --jdbc-driver=/usr/share/java/mysql-connector-java.jar
+  notify: restart ambari-server

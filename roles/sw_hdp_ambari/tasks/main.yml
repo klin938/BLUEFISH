@@ -1,0 +1,25 @@
+
+- name: YUM installing jdk8 (from Rocks contrib repos)
+  yum:
+    name:
+      - jdk1.8.0_101
+    state: present
+
+- name: ambari-server check if running
+  stat:
+    path: /var/run/ambari-server/ambari-server.pid
+  register: server_pid
+
+- name: ambari-agent check if running
+  stat:
+    path: /var/run/ambari-agent/ambari-agent.pid
+  register: agent_pid
+
+# Do NOT touch ambari if it is already running
+# or has run before (left a stale PID file).
+- include: ambari-server.yml
+  when: inventory_hostname in groups['ambari-server'] and not server_pid.stat.exists
+    
+- include: ambari-agent.yml
+  when: inventory_hostname in groups['ambari-agent'] and not agent_pid.stat.exists
+
