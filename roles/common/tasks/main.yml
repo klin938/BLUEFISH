@@ -1,21 +1,25 @@
-- name: Get the machine vendor
+- name: dice_bluefish_deploy reading the latest version from the repository
+  local_action:
+    module: shell /usr/bin/git show | grep commit -m 1 | awk '{print $2}'
+  register: dice_bluefish_deploy_ver
+  changed_when: false
+
+- name: SERVER reading the machine vendor information from dmidecode
   shell: "/usr/sbin/dmidecode -t 1 | grep Manufacturer | awk -F ':' '{print $2}' | awk '{$1=$1};1'"
   register: vendor
   changed_when: false
   ignore_errors: true
   
-- name: Get the machine model
+- name: SERVER reading the machine model information from dmidecode
   shell: "/usr/sbin/dmidecode -t 1 | grep Product | awk -F ':' '{print $2}' | awk '{$1=$1};1'"
   register: model
   changed_when: false
   ignore_errors: true
   
-- name: What's the vendor?
-  debug: var=vendor.stdout
+- name: DEBUG printing dice_bluefish_deploy latest version and server information
+  debug:
+    msg: "dice_bluefish_deploy Version: {{ dice_bluefish_deploy_ver.stdout }} | SERVER: {{ vendor.stdout }} {{ model.stdout }}"
   
-- name: What's the model?
-  debug: var=model.stdout
-
 - name: YUM install essential packages required for executing the playbook tasks
   yum:
     name:

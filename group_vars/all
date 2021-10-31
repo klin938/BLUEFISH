@@ -23,6 +23,10 @@
 # ansible-playbook -i inventory_albacore/ ./albacore_ceph_mon_R640_config --extra-vars "target=mds-6-28.local cx4_lx_bond_ip=10.0.1.188"
 #
 
+install_src_dir: "/share/apps/install"
+cluster_nas_dir: "/misc/PWBCAdminStore/cluster"
+dice_host_utils: "/opt/dice_host_utils"
+
 ########################################################################################################
 ###
 ### SECURITY SETTINGS
