@@ -1,0 +1,23 @@
+- name: YUM Add Google Cloud packages repository (CentOS/RHEL)
+  yum_repository:
+    name: 'gcsfuse'
+    description: 'Google Cloud Storage gcsfuse (packages.cloud.google.com)'
+    baseurl: 'https://packages.cloud.google.com/yum/repos/gcsfuse-el7-x86_64'
+    enabled: yes
+    gpgcheck: yes
+    repo_gpgcheck: no
+    gpgkey:
+      - https://packages.cloud.google.com/yum/doc/yum-key.gpg
+      - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    sslverify: no
+    state: present
+
+- name: YUM install `gcsfuse`
+  yum:
+    name: gcsfuse
+    state: present
+    update_cache: yes
+  register: yum_res
+  retries: 10
+  until: yum_res is succeeded
+  delay: 5

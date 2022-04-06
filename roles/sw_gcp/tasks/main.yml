@@ -1,0 +1,5 @@
+- include: install_gcp_sdk.yml
+  when: install_gcp_sdk|bool
+
+- include: install_gcp_gcs.yml
+  when: install_gcp_gcs|bool

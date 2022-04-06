@@ -1,0 +1,24 @@
+- name: YUM Add Google Cloud packages repository (CentOS/RHEL)
+  yum_repository:
+    name: 'cloud-sdk'
+    description: 'Google Cloud CLI (packages.cloud.google.com)'
+    baseurl: 'https://packages.cloud.google.com/yum/repos/cloud-sdk-el7-x86_64'
+    enabled: yes
+    gpgcheck: yes
+    repo_gpgcheck: no
+    gpgkey:
+      - https://packages.cloud.google.com/yum/doc/yum-key.gpg
+      - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    sslverify: no
+    state: present
+
+- name: YUM install `Google Cloud CLI`
+  yum:
+    name: google-cloud-cli
+    state: present
+    update_cache: yes
+  register: yum_res
+  retries: 10
+  until: yum_res is succeeded
+  delay: 5
+
