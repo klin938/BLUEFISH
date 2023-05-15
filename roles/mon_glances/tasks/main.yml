@@ -16,7 +16,7 @@
       - pymdstat
       - py3nvml
       - py-cpuinfo
-      - glances
+      - glances==3.2.5
     state: present
   notify: restart glances
 
