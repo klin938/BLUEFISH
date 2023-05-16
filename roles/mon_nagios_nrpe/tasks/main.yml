@@ -43,7 +43,7 @@
   with_items:
     - { command: 'command[check_sas2ircu]=/usr/bin/sudo /usr/lib64/nagios/plugins/check_sas2ircu' }
     - { command: 'command[check_md_raid]=/usr/bin/sudo /usr/lib64/nagios/plugins/check_md_raid' }
-    - { command: 'command[check_sda1]=/usr/lib64/nagios/plugins/check_disk -w 20% -c 10% -p /dev/sda1' }
+    - { command: 'command[check_sda1]=/usr/lib64/nagios/plugins/check_disk -w 20% -c 10% -p /' }
   notify: restart nrpe
 
 - name: NRPE ensure is started and enabled on boot
