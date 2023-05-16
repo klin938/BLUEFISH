@@ -9,7 +9,7 @@
 
 - name: BLUEFISH reading the repository version from Git tag
   local_action:
-    module: shell git describe
+    module: shell git describe --tags
   register: bluefish_tag_ver
   changed_when: false
 
