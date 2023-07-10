@@ -20,3 +20,9 @@
 
 - include: config_exec.yml
   when: exec_host.stdout == 'true'
+
+- name: SGE qacct accounting file symlink
+  ansible.builtin.file:
+    src: "/mnt/qmaster_common/accounting"
+    dest: "/opt/gridengine/default/common/accounting"
+    state: link
