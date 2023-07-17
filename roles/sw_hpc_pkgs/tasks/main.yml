@@ -91,7 +91,6 @@
       - readline-devel.x86_64
       - samba-client
       - screen.x86_64
-      - singularity
       - sqlite-devel.x86_64
       - squashfs-tools
       - subversion.x86_64

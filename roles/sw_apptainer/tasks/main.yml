@@ -1,0 +1,22 @@
+- name: YUM installing Apptainer/Singularity from EPEL
+  ansible.builtin.yum:
+    name:
+      - apptainer-1.1.9-1.el7
+    state: present
+    update_cache: yes
+    enablerepo: "epel,extras"
+  register: yum_res
+  retries: 10
+  until: yum_res is succeeded
+  delay: 5
+
+# https://apptainer.org/docs/admin/main/user_namespace.html
+# package apptainer-suid should not be installed and use
+# user namespace instead.
+- name: SYSCTL adding max_user_namespaces conf file
+  ansible.posix.sysctl:
+    name: user.max_user_namespaces
+    value: '15000'
+    sysctl_file: /etc/sysctl.d/90-max_user_namespaces.conf
+    reload: true
+
