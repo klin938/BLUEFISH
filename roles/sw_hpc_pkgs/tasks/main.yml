@@ -66,6 +66,7 @@
       - ImageMagick.x86_64
       - iotop
       - jdk1.8.0_101
+      - lftp
       - libcurl-devel.x86_64
       - liberation-mono-fonts
       - liberation-sans-fonts
