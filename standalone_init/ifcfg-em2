@@ -1,0 +1,11 @@
+DEVICE=em2
+HWADDR=xx:xx:xx:xx:xx:xx
+TYPE=Ethernet
+BOOTPROTO=none
+ONBOOT=yes
+PREFIX=26
+IPADDR=xx.xx.xx.xx
+NM_CONTROLLED=no
+PEERDNS=no
+DNS1=xx.xx.xx.xx
+DNS2=xx.xx.xx.xx

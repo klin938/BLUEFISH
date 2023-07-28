@@ -1,0 +1,201 @@
+# Example playbook for a standalone CentOS Dell R815 server
+---
+- hosts: localhost
+  vars:
+    ansible_connection: local
+    ansible_python_interpreter: "{{ansible_playbook_python}}"
+    inventory_hostname: exia.CHANGEME.edu.au
+  vars_files:
+    - group_vars/all
+
+  pre_tasks:
+    - name: YUM install the 'Development tools' package group
+      yum:
+        name: "@Development tools"
+        state: present
+        update_cache: yes
+
+    - name: YUM install Java, JDK etc
+      yum:
+        name:
+          - java-1.8.0-openjdk
+          - icedtea-web
+        state: present
+        update_cache: yes
+
+  roles:
+    - repo_rocks_wolfpack
+    - fs_autofs
+
+    - role: common
+      vars:
+      dummy: 'dummy'
+
+    - role: sec_selinux_disable
+
+    - role: sec_hosts_access
+      vars:
+        hosts_allow_profile: 'login'
+
+    - role: hw_dell_dsu
+      vars:
+        install_dsu: false
+        install_omsa: false
+
+    - role: nw_ipv6_disable
+
+# we noticed mlnx nic logical name change after the installation
+# so we should install the mlnx_ofed driver manually prior running
+# the bluefish deployment. We keep this section here just for demo
+# purposes.
+#    - role: nw_mlnx_ofed
+#      vars:
+#        install_mlnx_ofed: true
+#        mlnx_ofed_installer_opts: '--force --with-neohost-backend'
+
+    - role: nw_linux_bonding
+      vars:
+        config_cx4_lx: true
+        cx4_lx_bond_ip: '10.0.1.149'
+        cx4_lx_bond_dev_file: '{{ ansible_env.HOME }}/cx4_lx_bond_dev'
+
+    - role: nw_dice_lldp
+      vars:
+        dice_lldp_dev_file: '{{ ansible_env.HOME }}/dice_lldp_dev'
+
+    - role: nw_dice_vlan
+      vars:
+        config_dice_vlan_8021q_tagging: true
+        dice_vlan_8021q_trunk_dev: 'em3'
+        dice_vlan_8021q_ips:
+          - vlan_10:
+            vlan: 'vlan_10'
+            ip: '192.168.11.149'
+          - vlan_20:
+            vlan: 'vlan_20'
+            ip: '192.168.20.149'
+          - vlan_30:  
+            vlan: 'vlan_30'
+            ip: '192.168.30.242'
+          - vlan_50:
+            vlan: 'vlan_50'
+            ip: '192.168.50.149'
+          - vlan_60:  
+            vlan: 'vlan_60'
+            ip: '192.168.60.149'
+        config_dice_vlan_untagged: true
+        dice_vlan_untagged_ips:
+          - vlan_11:
+            vlan: 'vlan_11'
+            dev: 'em1'
+            ip: '192.168.12.149'
+          - vlan_40:
+            vlan: 'vlan_40'
+            dev: 'em4'
+            ip: '192.168.40.149'
+
+    - role: nw_xrdp
+
+  post_tasks:
+    - name: YUM Rocks-7.0 install additional packages from Rocks repo
+      yum:
+        name:
+          - singularity
+          - panfs
+          - panfs-apps
+        state: present
+        update_cache: yes
+        enablerepo: Rocks-7.0
+
+    - name: YUM EPEL install additional packages from EPEL repo
+      yum:
+        name:
+          - htop
+          - net-tools
+          - bind-utils
+          - mailx
+        state: present
+        update_cache: yes
+        enablerepo: epel
+
+    - name: POSTFIX SMTP relay main.cf
+      command: postconf -e "{{ item.key }}"="{{ item.value }}"
+      with_items:
+        - { key: 'mydomain', value: 'local' }
+        - { key: 'mydestination', value: '$mydomain, $myhostname, localhost.$mydomain, localhost' }
+        - { key: 'mynetworks', value: '127.0.0.0/8, 10.0.0.0/16, 192.168.10.0/24, 192.168.11.0/24, 192.168.12.0/24, 192.168.20.0/24, 192.168.30.0/24, 192.168.40.0/24, 192.168.50.0/24, 192.168.60.0/24' }
+        - { key: 'inet_interfaces', value: 'all' }
+        - { key: 'append_dot_mydomain', value: 'no' }
+        - { key: 'sender_canonical_maps', value: 'hash:/etc/postfix/sender-canonical' }
+        - { key: 'recipient_canonical_maps', value: 'hash:/etc/postfix/recipient-canonical' }
+        - { key: 'relayhost', value: 'smtp.CHANGEME.edu.au:25' }
+        - { key: 'relay_domains', value: 'CHANGEME.edu.au' }
+      notify: restart postfix
+
+    - name: POSTFIX SMTP relay sender-canonical
+      blockinfile:
+        dest: /etc/postfix/sender-canonical
+        marker: "### {mark} ANSIBLE MANAGED BLOCK"
+        block: |
+          @local @exia
+        create: yes
+      notify: restart postfix
+
+    - name: POSTFIX SMTP relay generate sender-canonical db
+      command: postmap hash:/etc/postfix/sender-canonical
+      notify: restart postfix
+
+    - name: POSTFIX SMTP relay recipient-canonical
+      blockinfile:
+        dest: /etc/postfix/recipient-canonical
+        marker: "### {mark} ANSIBLE MANAGED BLOCK"
+        block: |
+          root@CHANGEME.edu.au root
+        create: yes
+      notify: restart postfix
+
+    - name: POSTFIX SMTP relay generate recipient-canonical db
+      command: postmap hash:/etc/postfix/recipient-canonical
+      notify: restart postfix
+    
+    - name: /etc/aliases config admin email address
+      blockinfile:
+        dest: /etc/aliases
+        marker: "### {mark} ANSIBLE MANAGED BLOCK"
+        block: |
+          root:   admin@CHANGEME.org.au
+        create: yes
+      notify: restart postfix
+ 
+    - name: FIREWALLD configure services such as HTTP/HTTPS
+      firewalld:
+        zone: public
+        service: "{{ item }}"
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items:
+        - http
+        - https
+        - dns
+        - smtp
+        - smtps
+
+    - name: FIREWALLD configure ports for nagios etc
+      firewalld:
+        zone: public
+        port: "{{ item }}"
+        permanent: yes
+        immediate: yes
+        state: enabled
+      with_items:
+        - '18888/tcp'
+        
+    - name: NetworkManager disabled the service
+      service:
+        name: NetworkManager
+        state: stopped
+        enabled: no
+
+    - debug: msg="** completed ** please reboot the server now."
+
