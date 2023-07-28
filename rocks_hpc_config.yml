@@ -1,0 +1,221 @@
+# Example playbook (part 2) for configuering a Rocks cluster node
+# This should be run AFTER the init playbook.
+
+- hosts: '{{ target }}'
+  vars:
+    ansible_connection: local
+    ansible_python_interpreter: "{{ansible_playbook_python}}"
+    inventory_hostname: '{{ target }}'
+    fail2ban_ignoreip: '127.0.0.1/8 192.168.20.0/24'
+    ssh_allowusers: 'root admin'
+  vars_files:
+    - group_vars/all
+
+  pre_tasks:
+
+    - include_role:
+        name: common
+
+    - name: ROCKS getting rocks_ansible_version set in Rocks attr
+      shell: /opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep "rocks_ansible_version" | awk '{print $3}'
+      register: rocks_ansible_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: BLUEFISH version verification - FAILED
+      fail:
+        msg: "FAILED | Git repo {{ bluefish_ver.stdout }} | Rocks attr {{ rocks_ansible_version.stdout }}"
+      when:
+        - bluefish_ver.stdout != rocks_ansible_version.stdout
+        - rocks_ansible_version.stdout.find('dev') == -1
+
+    - name: BLUEFISH version verification - OK
+      debug:
+        msg: "OK | Git repo {{ bluefish_ver.stdout }} | Rocks attr {{ rocks_ansible_version.stdout }}"
+      changed_when: false
+
+    - name: ROCKS getting the cluster name
+      shell: /opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep "Info_ClusterName" | awk '{print $3}'
+      register: rocks_Info_ClusterName
+      changed_when: false
+      ignore_errors: true
+
+    - name: ROCKS getting the host's appliance type
+      shell: /opt/rocks/bin/rocks list host attr {{ inventory_hostname }} | grep "appliance" | awk '{print $3}'
+      register: rocks_appliance
+      changed_when: false
+      ignore_errors: true
+
+    - name: ROCKS getting the host's cluster private IP
+      shell: /opt/rocks/bin/rocks list host interface {{ inventory_hostname }} | grep 'private' | awk '{print $4}'
+      register: rocks_private_ip
+      changed_when: false
+      ignore_errors: true
+
+    - name: FPGA detecting Intel A10 PAC FPGA
+      shell: lspci | grep -i 09c[45]
+      register: fpga_a10_detected
+      changed_when: false
+      ignore_errors: true
+
+    - name: NIC detecting any Mellanox ConnectX-4 Lx
+      shell: lshw -class network | grep -i 'ConnectX-4 Lx'
+      register: mlnx_cx4_lx_detected
+      changed_when: false
+      ignore_errors: true
+
+  roles:
+    #
+    # nw_linux_bonding dose flush_handlers in its play so that 
+    # proper networking is operational. Since flush_handlers triggers
+    # any handlers that have been notified at that point in the play,
+    # I think it is better to run nw_linux_bonding in the early stage
+    # of the play so that it won't flush other handlers from other roles
+    #
+    - role: nw_linux_bonding
+      vars:
+        config_cx4_lx: "{{ 'true' if mlnx_cx4_lx_detected is success else 'false' }}"
+        # For Dell C6145 device fb0 appears as an extra logical name reported by lshw (possibly comes from its
+        # integrated AST2050 video card) there is no fix so we will just exclude this from the search result.
+        cx4_lx_bond_dev_cmd: "lshw -class network | grep -A5 'ConnectX-4' | grep 'logical' | grep -v '/dev/fb0' | awk -F ':' '{print $2}' | awk '{$1=$1};1'"
+
+    - role: sec_hosts_access
+      vars:
+        hosts_allow_profile: "{{ rocks_appliance.stdout }}"
+
+    - role: sec_AD_auth
+      vars:
+        AD_auth_sssd_simple_allow_groups: 'g_gwccg_hpc,g_dice_wolfpack'
+
+    - role: nw_dice_lldp
+
+    - role: hw_nvidia_cuda
+      vars:
+        install_cuda_toolkit: true
+
+    - role: hw_intel_fpga
+      vars:
+        test_ias: "{{ 'true' if fpga_a10_detected is success else 'false' }}"
+
+    - role: sw_hpc_pkgs
+      vars:
+        install_devtoolset: true
+        install_perl: true
+        install_python: true
+        install_intel_oneAPI: true
+
+    - role: sw_gcp
+      vars:
+        install_gcp_sdk: true
+        install_gcp_gcs: true
+
+    - role: sw_apptainer
+
+    - role: mon_glances
+      vars:
+        mon_glances_conf_profile: "{{ rocks_appliance.stdout }}"
+
+    - role: mon_nagios_nrpe
+    
+  post_tasks:
+
+    - include_role:
+        name: sw_rocks_sge
+      when: inventory_hostname in groups['sge-submit_host'] or
+            inventory_hostname in groups['sge-exec_host']
+
+    - include_role:
+        name: sw_hdp_ambari
+      when: inventory_hostname in groups['ambari-agent'] or
+            inventory_hostname in groups['ambari-server']
+
+    - name: YUM installing common essential packages from extras and EPEL repos
+      yum:
+        name:
+          - aha
+          - ftp
+          - htop
+          - lxc
+          - mailx
+          - man-pages
+          - mlocate
+          - nmap
+          - nmap-ncat
+          - python-setuptools
+          - redhat-lsb-core
+          - sl
+          - time
+          - traceroute
+          - tree
+        state: present
+        update_cache: yes
+        enablerepo: extras,epel
+      register: yum_res
+      retries: 10
+      until: yum_res is succeeded
+      delay: 5
+
+    - name: FAIL2BAN Login node add management IPs to ignoreip/white list
+      lineinfile: 
+        path: /etc/fail2ban/jail.conf
+        regexp: '^ignoreip = 127\.0\.0\.1' 
+        line: "ignoreip = {{ fail2ban_ignoreip }}"
+      when: rocks_appliance.stdout.find('login') != -1
+      notify: restart fail2ban
+
+    - name: limits.conf configure open files limit
+      lineinfile:
+        path: /etc/security/limits.conf
+        state: present
+        insertbefore: '^# End of file'
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      with_items:
+        - { regexp: '^[*] soft nofile\s', line: '* soft nofile 18000' }
+        - { regexp: '^[*] hard nofile\s', line: '* hard nofile 20000' }
+
+    - name: SYSCTL set fs.file-max in /etc/sysctl.conf
+      sysctl:
+        name: fs.file-max
+        value: '204708'
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+    - name: SSH Compute node restrict SSH access by AllowUsers
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^AllowUsers'
+        line: "AllowUsers {{ ssh_allowusers }}"
+        insertbefore: '^# Example of'
+      when: rocks_appliance.stdout.find('compute') != -1
+      notify: restart sshd
+
+    # 
+    - name: systemctl Compute node restarting SGE sgeexecd
+      command: systemctl restart sgeexecd.*
+      when: inventory_hostname in groups['sge-exec_host']
+
+    - name: MANPATH getting the list of man paths inserted to /etc/man.config by Rocks rolls
+      command: "awk '{ print $2 }' /etc/man.config"
+      register: rocks_manpath
+      changed_when: false
+      ignore_errors: true
+    
+    - name: MANPATH adding Rocks man paths to /etc/man_db.conf
+      lineinfile: 
+        path: /etc/man_db.conf
+        state: present
+        line: "MANDATORY_MANPATH            {{ item }}"
+      with_items:
+        - "{{ rocks_manpath.stdout_lines }}"
+
+    - name: INFO printing cluster node basic info
+      debug:
+        msg: "{{ rocks_Info_ClusterName.stdout }} | {{ target }} | {{ rocks_private_ip.stdout }} | {{ rocks_appliance.stdout }} | {{ vendor.stdout }} | {{ model.stdout }}"
+
+    - name: BLUEFISH DEPLOY COMPLETED, recording deployed version in /root/rocks_ansible_version
+      copy:
+        dest: "/root/rocks_ansible_version"
+        content: "{{ bluefish_ver.stdout }}"
+
