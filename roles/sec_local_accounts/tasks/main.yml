@@ -1,0 +1,7 @@
+- name: Add local admin user
+  user:
+    name: CHANGEME_ADMIN
+    groups: wheel
+    append: yes
+    home: /local_home/CHANGEME_ADMIN
+    password: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
