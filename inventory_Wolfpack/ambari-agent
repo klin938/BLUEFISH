@@ -1,0 +1,22 @@
+[hdfs_host]
+r640-8-1.local
+r640-8-2.local
+r640-8-3.local
+r640-8-4.local
+
+[ambari_client]
+login-2-1.local
+login-2-2.local
+
+[ambari_ctrl]
+hdp-ctrl01.local
+
+[ambari-agent:children]
+hdfs_host
+ambari_client
+ambari_ctrl
+
+[ambari-agent:vars]
+ambari_cluster_name=Wolfpack
+rocks_ambari_server=hdp-ambari.local
+amb_api_v1_url="http://{{ rocks_ambari_server }}:8080/api/v1/clusters/{{ ambari_cluster_name }}"

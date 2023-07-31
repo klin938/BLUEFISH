@@ -1,0 +1,29 @@
+#
+# The HDP cluster is deployed on top of the Rocks cluster. The entire deployment
+# consists of four stages:
+#
+# Stage 1: Rocks cluster (outside the BLUEFISH)
+#   Normal compute node provisioned by Rocks cluster, possibly with some default
+#   components disabled/removed such as SGE.
+#
+# Stage 2: roles/sw_hdp_ambari
+#   Setups Ambari and preping other components such as ambari-agent, disks for 
+#   HDFS on all participant compute nodes according to this inventory (or the
+#   freelance inventory).
+#
+# Stage 3-a: Blueprints (outside the BLUEFISH)
+#   Final HDP deployment is done via Ambari Blueprints:
+#   https://cwiki.apache.org/confluence/display/AMBARI/Blueprints
+#
+# Stage 3-b: freelance + R2D2 (OPTIONAL)
+#   Additional HDFS/YARN worker nodes (which are not included in the Blueprints)
+#   can be added via freelance inventory which facilitates the override of the
+#   target node's inventory groups. Freelance nodes are commissioned to the HDP
+#   cluster by R2D2.
+# 
+[ambari-server]
+hdp-ambari.local
+
+[blueprint:children]
+ambari-server
+ambari-agent

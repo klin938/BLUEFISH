@@ -1,0 +1,32 @@
+# An example of freelance inventory for a HDP worker node
+
+#
+# AMBARI-CLUSTER
+#
+[hdfs_host]
+example-0-1.local
+
+[ambari_client]
+
+# this is required as playbook refers this group var
+[ambari-agent:children]
+hdfs_host
+ambari_client
+
+[ambari-agent:vars]
+ambari_cluster_name=Wolfpack
+rocks_ambari_server=hdp-ambari-mlx.mlx
+amb_api_v1_url="http://{{ rocks_ambari_server }}:8080/api/v1/clusters/{{ ambari_cluster_name }}"
+
+# this is required as playbook refers this group var
+[ambari-server]
+
+#
+# SGE-CLUSTER
+#
+[sge-submit_host]
+
+[sge-exec_host]
+
+[freelance]
+example-0-1.local

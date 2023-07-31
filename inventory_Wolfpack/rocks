@@ -1,0 +1,30 @@
+#
+# This file registers the EVERY nodes which are managed by Rocks. Nodes are
+# categoried based on Rocks Appliance type (compute, login etc). This registry
+# is mainly useful for defining host variable in group_vars. This file should
+# be maintained manually.
+#
+[frontend]
+alpha00.local
+
+[login]
+login-2-1.local ks="Login 2 1 private enp1s0f0 xx:xx:xx:xx:xx:xx 192.168.11.21 login-2-1"
+login-2-2.local ks="Login 2 2 private enp1s0f0 yy:yy:yy:yy:yy:yy 192.168.11.22 login-2-2"
+hdp-ambari.local
+hdp-ctrl01.local
+
+[compute]
+c6145-1-1.local
+c6145-1-2.local
+c6145-1-3.local
+c6145-1-4.local
+
+r640-8-1.local
+r640-8-2.local
+r640-8-3.local
+r640-8-4.local
+
+[Wolfpack:children]
+frontend
+login
+compute
